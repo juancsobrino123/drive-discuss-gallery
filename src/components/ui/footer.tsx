@@ -43,12 +43,17 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div className="lg:col-span-2">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-royal rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-xl">A</span>
-              </div>
+            <a href="/" className="flex items-center space-x-3 mb-6" aria-label="AUTODEBATE home">
+              <img
+                src="/lovable-uploads/c2057dc6-874e-4d9d-b882-64f80e36c03c.png"
+                alt="AUTODEBATE logo"
+                className="h-12 w-auto"
+                width={48}
+                height={48}
+                loading="lazy"
+              />
               <span className="text-2xl font-bold">AUTODEBATE</span>
-            </div>
+            </a>
             <p className="text-gray-300 mb-6 max-w-md leading-relaxed">
               The premier destination for automotive content, community discussions, and event coverage. 
               Join thousands of car enthusiasts across all our platforms.
