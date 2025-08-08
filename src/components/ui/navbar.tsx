@@ -18,12 +18,16 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-royal rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">A</span>
-            </div>
+          <a href="/" className="flex items-center space-x-2" aria-label="AUTODEBATE home">
+            <img
+              src="/lovable-uploads/c2057dc6-874e-4d9d-b882-64f80e36c03c.png"
+              alt="AUTODEBATE logo"
+              className="h-8 w-auto"
+              width={32}
+              height={32}
+            />
             <span className="text-xl font-bold text-foreground">AUTODEBATE</span>
-          </div>
+          </a>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
