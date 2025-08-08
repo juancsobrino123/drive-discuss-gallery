@@ -1,0 +1,144 @@
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { ExternalLink, Users, Heart, Play, Calendar, MessageSquare } from "lucide-react";
+
+const PlatformSection = () => {
+  const platforms = [
+    {
+      name: "YouTube",
+      username: "@autodebate",
+      description: "Latest automotive content, reviews, and debates",
+      stats: "50K+ subscribers",
+      icon: Play,
+      url: "https://youtube.com/@autodebate",
+      color: "from-red-500 to-red-600",
+      featured: true
+    },
+    {
+      name: "Instagram",
+      username: "@autodebate",
+      description: "Daily automotive photography and stories",
+      stats: "25K+ followers",
+      icon: Heart,
+      url: "https://instagram.com/autodebate",
+      color: "from-pink-500 to-purple-600"
+    },
+    {
+      name: "TikTok",
+      username: "@autodebate",
+      description: "Quick automotive insights and trends",
+      stats: "15K+ followers",
+      icon: Play,
+      url: "https://tiktok.com/@autodebate",
+      color: "from-black to-gray-800"
+    },
+    {
+      name: "Kick",
+      username: "@autodebate",
+      description: "Live automotive discussions and streams",
+      stats: "5K+ followers",
+      icon: Users,
+      url: "https://kick.com/autodebate",
+      color: "from-green-500 to-green-600"
+    },
+    {
+      name: "Facebook",
+      username: "@autodebate",
+      description: "Community discussions and event updates",
+      stats: "20K+ likes",
+      icon: MessageSquare,
+      url: "https://facebook.com/autodebate",
+      color: "from-blue-600 to-blue-700"
+    },
+    {
+      name: "X (Twitter)",
+      username: "@autodebate",
+      description: "Real-time automotive news and updates",
+      stats: "12K+ followers",
+      icon: MessageSquare,
+      url: "https://x.com/autodebate",
+      color: "from-gray-900 to-black"
+    }
+  ];
+
+  return (
+    <section className="py-20 bg-muted/30">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+            Follow Us Everywhere
+          </h2>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            Stay connected with AUTODEBATE across all platforms. Never miss the latest automotive content, live streams, and community discussions.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {platforms.map((platform, index) => (
+            <Card 
+              key={platform.name} 
+              className={`p-6 hover:shadow-royal transition-all duration-300 transform hover:-translate-y-2 bg-gradient-card border-border/50 ${
+                platform.featured ? 'md:col-span-2 lg:col-span-1 ring-2 ring-primary/20' : ''
+              }`}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${platform.color} flex items-center justify-center`}>
+                  <platform.icon className="w-6 h-6 text-white" />
+                </div>
+                {platform.featured && (
+                  <div className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">
+                    Primary
+                  </div>
+                )}
+              </div>
+
+              <h3 className="text-xl font-bold text-foreground mb-2">{platform.name}</h3>
+              <p className="text-muted-foreground text-sm mb-1">{platform.username}</p>
+              <p className="text-muted-foreground mb-4">{platform.description}</p>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-primary font-semibold">{platform.stats}</span>
+                <Button 
+                  variant="platform" 
+                  size="sm"
+                  asChild
+                  className="group"
+                >
+                  <a href={platform.url} target="_blank" rel="noopener noreferrer">
+                    Follow
+                    <ExternalLink className="w-4 h-4 ml-1 group-hover:translate-x-0.5 transition-transform" />
+                  </a>
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Newsletter Signup */}
+        <div className="mt-16 text-center">
+          <Card className="max-w-2xl mx-auto p-8 bg-gradient-card">
+            <Calendar className="w-12 h-12 text-primary mx-auto mb-4" />
+            <h3 className="text-2xl font-bold text-foreground mb-4">
+              Never Miss an Update
+            </h3>
+            <p className="text-muted-foreground mb-6">
+              Get notified about new content, upcoming events, and exclusive community access.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+              <input 
+                type="email" 
+                placeholder="Enter your email"
+                className="flex-1 px-4 py-2 rounded-md border border-border bg-background focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+              />
+              <Button variant="hero">
+                Subscribe
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default PlatformSection;
