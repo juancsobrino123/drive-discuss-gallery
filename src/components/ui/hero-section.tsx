@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Play, Users, Calendar, Camera } from "lucide-react";
 import heroImage from "@/assets/hero-cars.jpg";
+import { useTranslation } from "react-i18next";
 
 const HeroSection = () => {
+  const { t } = useTranslation();
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
@@ -21,7 +23,7 @@ const HeroSection = () => {
           {/* Badge */}
           <div className="inline-flex items-center bg-primary-light border border-primary/20 rounded-full px-6 py-2 mb-8 animate-fade-in">
             <Users className="w-4 h-4 text-primary mr-2" />
-            <span className="text-primary font-medium">Join the Automotive Community</span>
+            <span className="text-primary font-medium">{t('hero.badge')}</span>
           </div>
 
           {/* Main Headline */}
@@ -30,18 +32,18 @@ const HeroSection = () => {
           </h1>
           
           <p className="text-xl md:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto leading-relaxed animate-fade-in">
-            The ultimate destination for automotive enthusiasts. Join our community across all platforms for the latest content, event coverage, and passionate car discussions.
+            {t('hero.tagline')}
           </p>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-scale-in">
             <Button variant="hero" size="lg" className="text-lg px-8 py-4">
               <Play className="w-5 h-5 mr-2" />
-              Watch Latest Content
+              {t('hero.watch')}
             </Button>
             <Button variant="platform" size="lg" className="text-lg px-8 py-4">
               <Camera className="w-5 h-5 mr-2" />
-              Browse Gallery
+              {t('hero.browseGallery')}
             </Button>
           </div>
 
@@ -49,19 +51,19 @@ const HeroSection = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center animate-fade-in">
             <div className="bg-card/10 backdrop-blur-sm rounded-lg p-6 border border-white/10">
               <div className="text-3xl font-bold text-white mb-2">50K+</div>
-              <div className="text-gray-300">YouTube Subscribers</div>
+              <div className="text-gray-300">{t('hero.stats.yt')}</div>
             </div>
             <div className="bg-card/10 backdrop-blur-sm rounded-lg p-6 border border-white/10">
               <div className="text-3xl font-bold text-white mb-2">25K+</div>
-              <div className="text-gray-300">Instagram Followers</div>
+              <div className="text-gray-300">{t('hero.stats.ig')}</div>
             </div>
             <div className="bg-card/10 backdrop-blur-sm rounded-lg p-6 border border-white/10">
               <div className="text-3xl font-bold text-white mb-2">100+</div>
-              <div className="text-gray-300">Events Covered</div>
+              <div className="text-gray-300">{t('hero.stats.events')}</div>
             </div>
             <div className="bg-card/10 backdrop-blur-sm rounded-lg p-6 border border-white/10">
               <div className="text-3xl font-bold text-white mb-2">10K+</div>
-              <div className="text-gray-300">Community Members</div>
+              <div className="text-gray-300">{t('hero.stats.members')}</div>
             </div>
           </div>
         </div>

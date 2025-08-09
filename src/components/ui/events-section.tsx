@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Calendar, MapPin, Clock, Users, ExternalLink } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const EventsSection = () => {
+  const { t } = useTranslation();
   const upcomingEvents = [
     {
       title: "Formula 1 Monaco Grand Prix",
@@ -80,10 +82,10 @@ const EventsSection = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-            Automotive Events Calendar
+            {t('events.heading')}
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Stay updated with upcoming automotive events, our live streams, and meetups. Never miss a moment of automotive excellence.
+            {t('events.subheading')}
           </p>
         </div>
 
@@ -91,7 +93,7 @@ const EventsSection = () => {
         <div className="mb-16">
           <h3 className="text-2xl font-bold text-foreground mb-8 flex items-center">
             <Calendar className="w-6 h-6 mr-3 text-primary" />
-            Upcoming Events
+            {t('events.upcoming')}
           </h3>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -105,7 +107,7 @@ const EventsSection = () => {
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <span className={`text-xs px-3 py-1 rounded-full font-medium ${getStatusColor(event.status)}`}>
-                      {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                      {t(`events.status.${event.status}`)}
                     </span>
                     <span className="text-xs px-3 py-1 rounded-full bg-muted text-muted-foreground">
                       {event.type}
@@ -113,7 +115,7 @@ const EventsSection = () => {
                   </div>
                   {event.featured && (
                     <span className="bg-gradient-royal text-primary-foreground text-xs px-3 py-1 rounded-full">
-                      Featured
+                      {t('events.status.featured')}
                     </span>
                   )}
                 </div>
@@ -148,10 +150,10 @@ const EventsSection = () => {
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button variant="hero" size="sm" className="flex-1">
                     <ExternalLink className="w-4 h-4 mr-2" />
-                    Learn More
+                    {t('events.learnMore')}
                   </Button>
                   <Button variant="platform" size="sm" className="flex-1">
-                    Add to Calendar
+                    {t('events.addToCalendar')}
                   </Button>
                 </div>
               </Card>
@@ -163,7 +165,7 @@ const EventsSection = () => {
         <div className="mb-16">
           <h3 className="text-2xl font-bold text-foreground mb-8 flex items-center">
             <Clock className="w-6 h-6 mr-3 text-primary" />
-            Recent Coverage
+            {t('events.recentCoverage')}
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -186,15 +188,15 @@ const EventsSection = () => {
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
                       <div className="text-lg font-bold text-primary">{event.photos}</div>
-                      <div className="text-xs text-muted-foreground">Photos</div>
+                      <div className="text-xs text-muted-foreground">{t('events.photos')}</div>
                     </div>
                     <div>
                       <div className="text-lg font-bold text-primary">{event.videos}</div>
-                      <div className="text-xs text-muted-foreground">Videos</div>
+                      <div className="text-xs text-muted-foreground">{t('events.videos')}</div>
                     </div>
                     <div>
                       <div className="text-lg font-bold text-primary">{event.coverage}</div>
-                      <div className="text-xs text-muted-foreground">Coverage</div>
+                      <div className="text-xs text-muted-foreground">{t('events.coverage')}</div>
                     </div>
                   </div>
                 </div>
@@ -212,17 +214,17 @@ const EventsSection = () => {
           <Card className="max-w-2xl mx-auto p-8 bg-gradient-royal text-primary-foreground">
             <Calendar className="w-12 h-12 mx-auto mb-4 opacity-90" />
             <h3 className="text-2xl font-bold mb-4">
-              Want Us at Your Event?
+              {t('events.ctaTitle')}
             </h3>
             <p className="mb-6 opacity-90">
-              Planning an automotive event? We'd love to provide coverage and connect with the community.
+              {t('events.ctaDesc')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button variant="platform" size="lg" className="bg-white text-primary hover:bg-white/90">
-                Submit Event
+                {t('events.submitEvent')}
               </Button>
               <Button variant="platform" size="lg" className="bg-white/10 text-white border-white/20 hover:bg-white/20">
-                Partnership Inquiry
+                {t('events.partnership')}
               </Button>
             </div>
           </Card>

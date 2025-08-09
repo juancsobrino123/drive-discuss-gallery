@@ -2,8 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Download, Eye, Calendar, MapPin } from "lucide-react";
 import galleryPreview from "@/assets/gallery-preview.jpg";
+import { useTranslation } from "react-i18next";
 
 const GallerySection = () => {
+  const { t } = useTranslation();
   const events = [
     {
       title: "Tokyo Auto Salon 2024",
@@ -37,10 +39,10 @@ const GallerySection = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-            Event Photography Gallery
+            {t('gallery.heading')}
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Capturing the essence of automotive culture. Download high-quality photos from every event we cover, completely free for our community.
+            {t('gallery.subheading')}
           </p>
         </div>
 
@@ -57,7 +59,7 @@ const GallerySection = () => {
               <div className="absolute bottom-6 left-6 right-6">
                 <div className="flex items-center text-white/90 text-sm mb-2">
                   <Calendar className="w-4 h-4 mr-2" />
-                  Latest Event Gallery
+                  {t('gallery.latestEvent')}
                 </div>
                 <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">
                   Tokyo Auto Salon 2024 - Complete Collection
@@ -65,11 +67,11 @@ const GallerySection = () => {
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button variant="hero" size="lg">
                     <Eye className="w-5 h-5 mr-2" />
-                    View Gallery
+                    {t('gallery.viewGallery')}
                   </Button>
                   <Button variant="platform" size="lg">
                     <Download className="w-5 h-5 mr-2" />
-                    Download All (156 Photos)
+                    {t('gallery.downloadAll', { count: 156 })}
                   </Button>
                 </div>
               </div>
@@ -88,7 +90,7 @@ const GallerySection = () => {
             >
               {event.featured && (
                 <div className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full mb-4 w-fit">
-                  Latest
+                  {t('gallery.latest')}
                 </div>
               )}
 
@@ -109,7 +111,7 @@ const GallerySection = () => {
 
               <div className="flex items-center justify-between">
                 <span className="text-primary font-semibold">
-                  {event.photos} photos
+                  {event.photos} {t('gallery.photos')}
                 </span>
                 <div className="flex gap-2">
                   <Button variant="ghost" size="sm">
@@ -130,9 +132,9 @@ const GallerySection = () => {
             <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center mx-auto">
               <Download className="w-8 h-8 text-primary" />
             </div>
-            <h3 className="text-xl font-bold text-foreground">Free Downloads</h3>
+            <h3 className="text-xl font-bold text-foreground">{t('gallery.features.freeTitle')}</h3>
             <p className="text-muted-foreground">
-              All photos are available for free download in high resolution for our community members.
+              {t('gallery.features.freeDesc')}
             </p>
           </div>
           
@@ -140,9 +142,9 @@ const GallerySection = () => {
             <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center mx-auto">
               <Eye className="w-8 h-8 text-primary" />
             </div>
-            <h3 className="text-xl font-bold text-foreground">High Quality</h3>
+            <h3 className="text-xl font-bold text-foreground">{t('gallery.features.qualityTitle')}</h3>
             <p className="text-muted-foreground">
-              Professional automotive photography captured with premium equipment at every event.
+              {t('gallery.features.qualityDesc')}
             </p>
           </div>
 
@@ -150,9 +152,9 @@ const GallerySection = () => {
             <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center mx-auto">
               <Calendar className="w-8 h-8 text-primary" />
             </div>
-            <h3 className="text-xl font-bold text-foreground">Regular Updates</h3>
+            <h3 className="text-xl font-bold text-foreground">{t('gallery.features.updatesTitle')}</h3>
             <p className="text-muted-foreground">
-              New galleries added after every event we cover. Never miss a moment of automotive excellence.
+              {t('gallery.features.updatesDesc')}
             </p>
           </div>
         </div>

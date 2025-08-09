@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ExternalLink, Users, Heart, Play, Calendar, MessageSquare } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const PlatformSection = () => {
+  const { t } = useTranslation();
   const platforms = [
     {
       name: "YouTube",
@@ -66,10 +68,10 @@ const PlatformSection = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-            Follow Us Everywhere
+            {t('platform.heading')}
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Stay connected with AUTODEBATE across all platforms. Never miss the latest automotive content, live streams, and community discussions.
+            {t('platform.subheading')}
           </p>
         </div>
 
@@ -87,7 +89,7 @@ const PlatformSection = () => {
                 </div>
                 {platform.featured && (
                   <div className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">
-                    Primary
+                    {t('platform.primary')}
                   </div>
                 )}
               </div>
@@ -105,7 +107,7 @@ const PlatformSection = () => {
                   className="group"
                 >
                   <a href={platform.url} target="_blank" rel="noopener noreferrer">
-                    Follow
+                    {t('platform.follow')}
                     <ExternalLink className="w-4 h-4 ml-1 group-hover:translate-x-0.5 transition-transform" />
                   </a>
                 </Button>
@@ -116,22 +118,22 @@ const PlatformSection = () => {
 
         {/* Newsletter Signup */}
         <div className="mt-16 text-center">
-          <Card className="max-w-2xl mx-auto p-8 bg-gradient-card">
+          <Card className="max-w-2xl mx-auto p-8 bg-gradient-card" aria-labelledby="newsletter-title">
             <Calendar className="w-12 h-12 text-primary mx-auto mb-4" />
             <h3 className="text-2xl font-bold text-foreground mb-4">
-              Never Miss an Update
+              {t('platform.newsletterHeading')}
             </h3>
             <p className="text-muted-foreground mb-6">
-              Get notified about new content, upcoming events, and exclusive community access.
+              {t('platform.newsletterDesc')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
               <input 
                 type="email" 
-                placeholder="Enter your email"
+                placeholder={t('platform.emailPlaceholder')}
                 className="flex-1 px-4 py-2 rounded-md border border-border bg-background focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
               />
               <Button variant="hero">
-                Subscribe
+                {t('platform.subscribe')}
               </Button>
             </div>
           </Card>

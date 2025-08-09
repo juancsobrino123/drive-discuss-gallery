@@ -1,0 +1,104 @@
+{
+  "nav": {
+    "home": "Home",
+    "gallery": "Gallery",
+    "blog": "Blog",
+    "events": "Events",
+    "about": "About",
+    "contact": "Contact",
+    "join": "Join Community",
+    "language": "Language",
+    "es": "ES",
+    "en": "EN"
+  },
+  "hero": {
+    "badge": "Join the Automotive Community",
+    "tagline": "The ultimate destination for automotive enthusiasts. Join our community across all platforms for the latest content, event coverage, and passionate car discussions.",
+    "watch": "Watch Latest Content",
+    "browseGallery": "Browse Gallery",
+    "stats": {
+      "yt": "YouTube Subscribers",
+      "ig": "Instagram Followers",
+      "events": "Events Covered",
+      "members": "Community Members"
+    }
+  },
+  "platform": {
+    "heading": "Follow Us Everywhere",
+    "subheading": "Stay connected with AUTODEBATE across all platforms. Never miss the latest automotive content, live streams, and community discussions.",
+    "primary": "Primary",
+    "follow": "Follow",
+    "newsletterHeading": "Never Miss an Update",
+    "newsletterDesc": "Get notified about new content, upcoming events, and exclusive community access.",
+    "emailPlaceholder": "Enter your email",
+    "subscribe": "Subscribe"
+  },
+  "gallery": {
+    "heading": "Event Photography Gallery",
+    "subheading": "Capturing the essence of automotive culture. Download high-quality photos from every event we cover, completely free for our community.",
+    "latestEvent": "Latest Event Gallery",
+    "viewGallery": "View Gallery",
+    "downloadAll": "Download All ({{count}} Photos)",
+    "latest": "Latest",
+    "photos": "photos",
+    "features": {
+      "freeTitle": "Free Downloads",
+      "freeDesc": "All photos are available for free download in high resolution for our community members.",
+      "qualityTitle": "High Quality",
+      "qualityDesc": "Professional automotive photography captured with premium equipment at every event.",
+      "updatesTitle": "Regular Updates",
+      "updatesDesc": "New galleries added after every event we cover. Never miss a moment of automotive excellence."
+    }
+  },
+  "blog": {
+    "heading": "Automotive Insights & Discussions",
+    "subheading": "Deep dives into automotive culture, technical analysis, and community discussions. Join the conversation about everything cars.",
+    "featured": "Featured",
+    "readMore": "Read More",
+    "loadMore": "Load More Articles",
+    "categories": "Categories",
+    "community": "Community",
+    "totalPosts": "Total Posts",
+    "activeMembers": "Active Members",
+    "thisWeek": "This Week",
+    "newPosts": "{{count}} new posts",
+    "joinDiscussion": "Join Discussion",
+    "stayUpdated": "Stay Updated",
+    "newsletterDesc": "Get the latest automotive insights delivered to your inbox.",
+    "yourEmail": "Your email",
+    "subscribe": "Subscribe",
+    "share": "Share"
+  },
+  "events": {
+    "heading": "Automotive Events Calendar",
+    "subheading": "Stay updated with upcoming automotive events, our live streams, and meetups. Never miss a moment of automotive excellence.",
+    "upcoming": "Upcoming Events",
+    "learnMore": "Learn More",
+    "addToCalendar": "Add to Calendar",
+    "recentCoverage": "Recent Coverage",
+    "photos": "Photos",
+    "videos": "Videos",
+    "coverage": "Coverage",
+    "ctaTitle": "Want Us at Your Event?",
+    "ctaDesc": "Planning an automotive event? We'd love to provide coverage and connect with the community.",
+    "submitEvent": "Submit Event",
+    "partnership": "Partnership Inquiry",
+    "status": {
+      "hosting": "Hosting",
+      "covering": "Covering",
+      "attending": "Attending",
+      "featured": "Featured"
+    }
+  },
+  "footer": {
+    "stayInLoop": "Stay in the Loop",
+    "enterEmail": "Enter your email",
+    "subscribe": "Subscribe",
+    "quickLinks": "Quick Links",
+    "connect": "Connect",
+    "followUs": "Follow Us",
+    "globalCoverage": "Global Coverage",
+    "content247": "24/7 Content",
+    "rights": "All rights reserved."
+  }
+}

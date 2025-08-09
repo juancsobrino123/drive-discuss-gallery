@@ -1,0 +1,104 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "gallery": "Galería",
+    "blog": "Blog",
+    "events": "Eventos",
+    "about": "Acerca",
+    "contact": "Contacto",
+    "join": "Únete a la comunidad",
+    "language": "Idioma",
+    "es": "ES",
+    "en": "EN"
+  },
+  "hero": {
+    "badge": "Únete a la comunidad automotriz",
+    "tagline": "El destino definitivo para los entusiastas del motor. Súmate a nuestra comunidad en todas las plataformas para ver el mejor contenido, cobertura de eventos y debates apasionados sobre autos.",
+    "watch": "Ver contenido reciente",
+    "browseGallery": "Explorar galería",
+    "stats": {
+      "yt": "Suscriptores en YouTube",
+      "ig": "Seguidores en Instagram",
+      "events": "Eventos cubiertos",
+      "members": "Miembros de la comunidad"
+    }
+  },
+  "platform": {
+    "heading": "Síguenos en todas partes",
+    "subheading": "Mantente conectado con AUTODEBATE en todas las plataformas. No te pierdas el contenido más reciente, transmisiones en vivo y debates de la comunidad.",
+    "primary": "Principal",
+    "follow": "Seguir",
+    "newsletterHeading": "No te pierdas ninguna novedad",
+    "newsletterDesc": "Recibe avisos de nuevo contenido, próximos eventos y acceso exclusivo a la comunidad.",
+    "emailPlaceholder": "Ingresa tu correo",
+    "subscribe": "Suscribirse"
+  },
+  "gallery": {
+    "heading": "Galería de fotografía de eventos",
+    "subheading": "Capturamos la esencia de la cultura automotriz. Descarga fotos en alta calidad de cada evento que cubrimos, totalmente gratis para nuestra comunidad.",
+    "latestEvent": "Galería del evento más reciente",
+    "viewGallery": "Ver galería",
+    "downloadAll": "Descargar todo ({{count}} fotos)",
+    "latest": "Reciente",
+    "photos": "fotos",
+    "features": {
+      "freeTitle": "Descargas gratis",
+      "freeDesc": "Todas las fotos están disponibles para descargar gratis en alta resolución para nuestra comunidad.",
+      "qualityTitle": "Alta calidad",
+      "qualityDesc": "Fotografía automotriz profesional capturada con equipo de primera en cada evento.",
+      "updatesTitle": "Actualizaciones frecuentes",
+      "updatesDesc": "Nuevas galerías después de cada evento que cubrimos. No te pierdas ningún momento de excelencia automotriz."
+    }
+  },
+  "blog": {
+    "heading": "Ideas y debates automotrices",
+    "subheading": "Análisis profundos de la cultura automotriz, contenido técnico y debates de la comunidad. Únete a la conversación sobre todo lo relacionado a autos.",
+    "featured": "Destacado",
+    "readMore": "Leer más",
+    "loadMore": "Cargar más artículos",
+    "categories": "Categorías",
+    "community": "Comunidad",
+    "totalPosts": "Publicaciones totales",
+    "activeMembers": "Miembros activos",
+    "thisWeek": "Esta semana",
+    "newPosts": "{{count}} publicaciones nuevas",
+    "joinDiscussion": "Unirse a la discusión",
+    "stayUpdated": "Mantente al día",
+    "newsletterDesc": "Recibe en tu correo las últimas ideas automotrices.",
+    "yourEmail": "Tu correo",
+    "subscribe": "Suscribirse",
+    "share": "Compartir"
+  },
+  "events": {
+    "heading": "Calendario de eventos automotrices",
+    "subheading": "Mantente al tanto de los próximos eventos, nuestros streams y convivencias. No te pierdas ningún momento de excelencia automotriz.",
+    "upcoming": "Próximos eventos",
+    "learnMore": "Más información",
+    "addToCalendar": "Agregar al calendario",
+    "recentCoverage": "Cobertura reciente",
+    "photos": "Fotos",
+    "videos": "Videos",
+    "coverage": "Cobertura",
+    "ctaTitle": "¿Quieres que estemos en tu evento?",
+    "ctaDesc": "¿Organizas un evento automotriz? Nos encantaría cubrirlo y conectar con la comunidad.",
+    "submitEvent": "Enviar evento",
+    "partnership": "Solicitud de colaboración",
+    "status": {
+      "hosting": "Organizando",
+      "covering": "Cubriendo",
+      "attending": "Asistiendo",
+      "featured": "Destacado"
+    }
+  },
+  "footer": {
+    "stayInLoop": "Mantente al tanto",
+    "enterEmail": "Ingresa tu correo",
+    "subscribe": "Suscribirse",
+    "quickLinks": "Enlaces rápidos",
+    "connect": "Conectar",
+    "followUs": "Síguenos",
+    "globalCoverage": "Cobertura global",
+    "content247": "Contenido 24/7",
+    "rights": "Todos los derechos reservados."
+  }
+}

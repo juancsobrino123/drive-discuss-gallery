@@ -1,17 +1,25 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { t, i18n } = useTranslation();
 
   const navItems = [
-    { label: "Home", href: "#home" },
-    { label: "Gallery", href: "#gallery" },
-    { label: "Blog", href: "#blog" },
-    { label: "Events", href: "#events" },
-    { label: "About", href: "#about" },
+    { label: t('nav.home'), href: '#home' },
+    { label: t('nav.gallery'), href: '#gallery' },
+    { label: t('nav.blog'), href: '#blog' },
+    { label: t('nav.events'), href: '#events' },
+    { label: t('nav.about'), href: '#about' },
   ];
+
+  const toggleLanguage = () => {
+    const next = i18n.language?.toLowerCase().startsWith('es') ? 'en' : 'es';
+    i18n.changeLanguage(next);
+    try { localStorage.setItem('lang', next); } catch {}
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
@@ -42,12 +50,20 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* CTA Button */}
-          <div className="hidden md:block">
-            <Button variant="hero" size="sm">
-              Join Community
-            </Button>
-          </div>
+{/* CTA + Language (Desktop) */}
+<div className="hidden md:flex items-center gap-2">
+  <Button
+    variant="ghost"
+    size="sm"
+    onClick={toggleLanguage}
+    aria-label={t('nav.language')}
+  >
+    {i18n.language?.toLowerCase().startsWith('es') ? t('nav.en') : t('nav.es')}
+  </Button>
+  <Button variant="hero" size="sm">
+    {t('nav.join')}
+  </Button>
+</div>
 
           {/* Mobile Menu Button */}
           <Button
@@ -60,26 +76,36 @@ const Navbar = () => {
           </Button>
         </div>
 
-        {/* Mobile Menu */}
-        {isOpen && (
-          <div className="md:hidden py-4 border-t border-border">
-            <div className="flex flex-col space-y-4">
-              {navItems.map((item) => (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  className="text-muted-foreground hover:text-primary transition-colors duration-300 font-medium py-2"
-                  onClick={() => setIsOpen(false)}
-                >
-                  {item.label}
-                </a>
-              ))}
-              <Button variant="hero" size="sm" className="mt-4">
-                Join Community
-              </Button>
-            </div>
-          </div>
-        )}
+{/* Mobile Menu */}
+{isOpen && (
+  <div className="md:hidden py-4 border-t border-border">
+    <div className="flex flex-col space-y-4">
+      {navItems.map((item) => (
+        <a
+          key={item.label}
+          href={item.href}
+          className="text-muted-foreground hover:text-primary transition-colors duration-300 font-medium py-2"
+          onClick={() => setIsOpen(false)}
+        >
+          {item.label}
+        </a>
+      ))}
+      <div className="flex items-center gap-3 mt-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => { toggleLanguage(); setIsOpen(false); }}
+          aria-label={t('nav.language')}
+        >
+          {i18n.language?.toLowerCase().startsWith('es') ? t('nav.en') : t('nav.es')}
+        </Button>
+        <Button variant="hero" size="sm">
+          {t('nav.join')}
+        </Button>
+      </div>
+    </div>
+  </div>
+)}
       </div>
     </nav>
   );

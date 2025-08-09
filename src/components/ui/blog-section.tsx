@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowRight, MessageSquare, Heart, Share } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const BlogSection = () => {
+  const { t } = useTranslation();
   const posts = [
     {
       title: "The Future of Electric Supercars: Performance vs. Sustainability",
@@ -58,10 +60,10 @@ const BlogSection = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-            Automotive Insights & Discussions
+            {t('blog.heading')}
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Deep dives into automotive culture, technical analysis, and community discussions. Join the conversation about everything cars.
+            {t('blog.subheading')}
           </p>
         </div>
 
@@ -83,7 +85,7 @@ const BlogSection = () => {
                       </span>
                       {post.featured && (
                         <span className="bg-gradient-royal text-primary-foreground text-xs px-3 py-1 rounded-full">
-                          Featured
+                          {t('blog.featured')}
                         </span>
                       )}
                     </div>
@@ -106,7 +108,7 @@ const BlogSection = () => {
                       </div>
 
                       <Button variant="ghost" size="sm" className="group">
-                        Read More
+                        {t('blog.readMore')}
                         <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-0.5 transition-transform" />
                       </Button>
                     </div>
@@ -122,7 +124,7 @@ const BlogSection = () => {
                       </div>
                       <div className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors cursor-pointer">
                         <Share className="w-4 h-4" />
-                        <span className="text-sm">Share</span>
+                        <span className="text-sm">{t('blog.share')}</span>
                       </div>
                     </div>
                   </div>
@@ -132,7 +134,7 @@ const BlogSection = () => {
 
             <div className="text-center">
               <Button variant="royal" size="lg">
-                Load More Articles
+                {t('blog.loadMore')}
               </Button>
             </div>
           </div>
@@ -141,7 +143,7 @@ const BlogSection = () => {
           <div className="space-y-8">
             {/* Categories */}
             <Card className="p-6 bg-gradient-card">
-              <h3 className="text-xl font-bold text-foreground mb-4">Categories</h3>
+              <h3 className="text-xl font-bold text-foreground mb-4">{t('blog.categories')}</h3>
               <div className="space-y-2">
                 {categories.map((category) => (
                   <button
@@ -156,40 +158,40 @@ const BlogSection = () => {
 
             {/* Community Stats */}
             <Card className="p-6 bg-gradient-card">
-              <h3 className="text-xl font-bold text-foreground mb-4">Community</h3>
+              <h3 className="text-xl font-bold text-foreground mb-4">{t('blog.community')}</h3>
               <div className="space-y-4">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total Posts</span>
+                  <span className="text-muted-foreground">{t('blog.totalPosts')}</span>
                   <span className="font-semibold text-foreground">1,247</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Active Members</span>
+                  <span className="text-muted-foreground">{t('blog.activeMembers')}</span>
                   <span className="font-semibold text-foreground">15,623</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">This Week</span>
-                  <span className="font-semibold text-foreground">89 new posts</span>
+                  <span className="text-muted-foreground">{t('blog.thisWeek')}</span>
+                  <span className="font-semibold text-foreground">{t('blog.newPosts', { count: 89 })}</span>
                 </div>
               </div>
               <Button variant="hero" className="w-full mt-4">
-                Join Discussion
+                {t('blog.joinDiscussion')}
               </Button>
             </Card>
 
             {/* Newsletter */}
             <Card className="p-6 bg-gradient-royal text-primary-foreground">
-              <h3 className="text-xl font-bold mb-4">Stay Updated</h3>
+              <h3 className="text-xl font-bold mb-4">{t('blog.stayUpdated')}</h3>
               <p className="mb-4 opacity-90">
-                Get the latest automotive insights delivered to your inbox.
+                {t('blog.newsletterDesc')}
               </p>
               <div className="space-y-3">
                 <input 
                   type="email"
-                  placeholder="Your email"
+                  placeholder={t('blog.yourEmail')}
                   className="w-full px-3 py-2 rounded-md bg-white/10 border border-white/20 placeholder-white/70 text-white focus:ring-2 focus:ring-white/30 focus:border-transparent outline-none"
                 />
                 <Button variant="platform" className="w-full bg-white text-primary hover:bg-white/90">
-                  Subscribe
+                  {t('blog.subscribe')}
                 </Button>
               </div>
             </Card>
