@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ExternalLink, Users, Heart, Play, Calendar, MessageSquare } from "lucide-react";
+import { ExternalLink, Calendar } from "lucide-react";
+import { SiYoutube, SiInstagram, SiTiktok, SiKick, SiFacebook, SiX } from "react-icons/si";
 import { useTranslation } from "react-i18next";
 
 const PlatformSection = () => {
@@ -11,7 +12,7 @@ const PlatformSection = () => {
       username: "@autodebate",
       description: "Latest automotive content, reviews, and debates",
       stats: "50K+ subscribers",
-      icon: Play,
+      icon: SiYoutube,
       url: "https://youtube.com/@autodebate",
       color: "from-red-500 to-red-600",
       featured: true
@@ -21,7 +22,7 @@ const PlatformSection = () => {
       username: "@autodebate",
       description: "Daily automotive photography and stories",
       stats: "25K+ followers",
-      icon: Heart,
+      icon: SiInstagram,
       url: "https://instagram.com/autodebate",
       color: "from-pink-500 to-purple-600"
     },
@@ -30,7 +31,7 @@ const PlatformSection = () => {
       username: "@autodebate",
       description: "Quick automotive insights and trends",
       stats: "15K+ followers",
-      icon: Play,
+      icon: SiTiktok,
       url: "https://tiktok.com/@autodebate",
       color: "from-black to-gray-800"
     },
@@ -39,7 +40,7 @@ const PlatformSection = () => {
       username: "@autodebate",
       description: "Live automotive discussions and streams",
       stats: "5K+ followers",
-      icon: Users,
+      icon: SiKick,
       url: "https://kick.com/autodebate",
       color: "from-green-500 to-green-600"
     },
@@ -48,7 +49,7 @@ const PlatformSection = () => {
       username: "@autodebate",
       description: "Community discussions and event updates",
       stats: "20K+ likes",
-      icon: MessageSquare,
+      icon: SiFacebook,
       url: "https://facebook.com/autodebate",
       color: "from-blue-600 to-blue-700"
     },
@@ -57,7 +58,7 @@ const PlatformSection = () => {
       username: "@autodebate",
       description: "Real-time automotive news and updates",
       stats: "12K+ followers",
-      icon: MessageSquare,
+      icon: SiX,
       url: "https://x.com/autodebate",
       color: "from-gray-900 to-black"
     }
@@ -85,7 +86,7 @@ const PlatformSection = () => {
             >
               <div className="flex items-start justify-between mb-4">
                 <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${platform.color} flex items-center justify-center`}>
-                  <platform.icon className="w-6 h-6 text-white" />
+                  <platform.icon className="text-white" size={24} />
                 </div>
                 {platform.featured && (
                   <div className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">
