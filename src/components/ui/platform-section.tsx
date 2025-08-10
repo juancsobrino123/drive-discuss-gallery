@@ -11,7 +11,7 @@ const PlatformSection = () => {
       name: "YouTube",
       username: "@autodebate",
       description: "Latest automotive content, motorsports, reviews and debates",
-      stats: "2K+ subscribers",
+      stats: "1.4K+ subscribers",
       icon: SiYoutube,
       url: "https://youtube.com/@autodebate",
       color: "from-red-500 to-red-600",
