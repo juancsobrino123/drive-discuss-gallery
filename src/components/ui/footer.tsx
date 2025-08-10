@@ -82,7 +82,7 @@ const Footer = () => {
             <h4 className="font-bold text-lg mb-6">{t('footer.quickLinks')}</h4>
             <ul className="space-y-3">
               {quickLinks.map((link) => (
-                <li key={link.label}>
+                <li key={link.key}>
                   <a 
                     href={link.href}
                     className="text-gray-300 hover:text-primary transition-colors duration-300"
