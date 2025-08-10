@@ -39,7 +39,7 @@ const Gallery = () => {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: "Galería de Eventos de AUTODEBATE",
+    name: "Galería de Eventos AUTODEBATE",
     description: t('gallery.subheading'),
     url: typeof window !== 'undefined' ? `${window.location.origin}/galeria` : '/galeria',
   };
