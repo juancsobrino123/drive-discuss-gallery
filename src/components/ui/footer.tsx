@@ -54,7 +54,7 @@ const Footer = () => {
                 height={48}
                 loading="lazy"
               />
-              <span className="text-2xl font-bold">AUTODEBATE</span>
+              <span className="text-2xl font-bold font-brand">AUTODEBATE</span>
             </a>
             <p className="text-gray-300 mb-6 max-w-md leading-relaxed">
               The premier destination for automotive content, community discussions, and event coverage. 

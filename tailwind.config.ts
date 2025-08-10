@@ -86,6 +86,7 @@ export default {
 				'fast': 'var(--transition-fast)'
 			},
 			fontFamily: {
+				'brand': ['Aero', 'Inter', 'system-ui', 'sans-serif'],
 				'heading': ['Inter', 'system-ui', 'sans-serif'],
 				'body': ['Inter', 'system-ui', 'sans-serif']
 			},

@@ -34,7 +34,7 @@ const Navbar = () => {
               width={32}
               height={32}
             />
-            <span className="text-xl font-bold text-foreground">AUTODEBATE</span>
+            <span className="text-xl font-bold text-foreground font-brand">AUTODEBATE</span>
           </a>
 
           {/* Desktop Navigation */}
