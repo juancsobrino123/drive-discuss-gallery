@@ -30,7 +30,7 @@ const PlatformSection = () => {
       name: "TikTok",
       username: "@autodebate",
       description: "Quick automotive insights and trends",
-      stats: "3+ followers",
+      stats: "3K+ followers",
       icon: SiTiktok,
       url: "https://tiktok.com/@autodebate",
       color: "from-black to-gray-800"
