@@ -10,7 +10,7 @@ const PlatformSection = () => {
     {
       name: "YouTube",
       username: "@autodebate",
-      description: "Latest automotive content, reviews, and debates",
+      description: "Latest automotive content, motorsports, reviews and debates",
       stats: "50K+ subscribers",
       icon: SiYoutube,
       url: "https://youtube.com/@autodebate",
@@ -20,7 +20,7 @@ const PlatformSection = () => {
     {
       name: "Instagram",
       username: "@autodebate",
-      description: "Daily automotive photography and stories",
+      description: "Daily automotive video, photography and stories",
       stats: "25K+ followers",
       icon: SiInstagram,
       url: "https://instagram.com/autodebate",
