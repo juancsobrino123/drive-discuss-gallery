@@ -11,7 +11,7 @@ const PlatformSection = () => {
       name: "YouTube",
       username: "@autodebate",
       description: "Latest automotive content, motorsports, reviews and debates",
-      stats: "50K+ subscribers",
+      stats: "2K+ subscribers",
       icon: SiYoutube,
       url: "https://youtube.com/@autodebate",
       color: "from-red-500 to-red-600",
@@ -21,7 +21,7 @@ const PlatformSection = () => {
       name: "Instagram",
       username: "@autodebate",
       description: "Daily automotive video, photography and stories",
-      stats: "25K+ followers",
+      stats: "8K+ followers",
       icon: SiInstagram,
       url: "https://instagram.com/autodebate",
       color: "from-pink-500 to-purple-600"
@@ -30,7 +30,7 @@ const PlatformSection = () => {
       name: "TikTok",
       username: "@autodebate",
       description: "Quick automotive insights and trends",
-      stats: "15K+ followers",
+      stats: "3+ followers",
       icon: SiTiktok,
       url: "https://tiktok.com/@autodebate",
       color: "from-black to-gray-800"
@@ -39,7 +39,7 @@ const PlatformSection = () => {
       name: "Kick",
       username: "@autodebate",
       description: "Live automotive discussions and streams",
-      stats: "5K+ followers",
+      stats: "1K+ followers",
       icon: SiKick,
       url: "https://kick.com/autodebate",
       color: "from-green-500 to-green-600"
@@ -48,7 +48,7 @@ const PlatformSection = () => {
       name: "Facebook",
       username: "@autodebate",
       description: "Community discussions and event updates",
-      stats: "20K+ likes",
+      stats: "2K+ likes",
       icon: SiFacebook,
       url: "https://facebook.com/autodebate",
       color: "from-blue-600 to-blue-700"
