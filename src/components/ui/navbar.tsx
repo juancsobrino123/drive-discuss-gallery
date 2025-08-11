@@ -60,8 +60,8 @@ const Navbar = () => {
   >
     {i18n.language?.toLowerCase().startsWith('es') ? t('nav.en') : t('nav.es')}
   </Button>
-  <Button variant="hero" size="sm">
-    {t('nav.join')}
+  <Button variant="hero" size="sm" asChild>
+    <a href="/auth">{t('nav.join')}</a>
   </Button>
 </div>
 
@@ -99,8 +99,8 @@ const Navbar = () => {
         >
           {i18n.language?.toLowerCase().startsWith('es') ? t('nav.en') : t('nav.es')}
         </Button>
-        <Button variant="hero" size="sm">
-          {t('nav.join')}
+        <Button variant="hero" size="sm" asChild>
+          <a href="/auth">{t('nav.join')}</a>
         </Button>
       </div>
     </div>
