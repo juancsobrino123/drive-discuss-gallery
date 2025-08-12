@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
-
+import { supabase } from "@/integrations/supabase/client";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const { t, i18n } = useTranslation();
 
   const navItems = [
@@ -20,6 +21,16 @@ const Navbar = () => {
     i18n.changeLanguage(next);
     try { localStorage.setItem('lang', next); } catch {}
   };
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
@@ -60,9 +71,24 @@ const Navbar = () => {
   >
     {i18n.language?.toLowerCase().startsWith('es') ? t('nav.en') : t('nav.es')}
   </Button>
-  <Button variant="hero" size="sm" asChild>
-    <a href="/auth?mode=signup">{t('nav.join')}</a>
-  </Button>
+  {user ? (
+    <>
+      <Button variant="secondary" size="sm" asChild>
+        <a href="/profile">{t('nav.profile')}</a>
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={async () => { await supabase.auth.signOut(); }}
+      >
+        {t('nav.logout')}
+      </Button>
+    </>
+  ) : (
+    <Button variant="hero" size="sm" asChild>
+      <a href="/auth?mode=signup">{t('nav.join')}</a>
+    </Button>
+  )}
 </div>
 
           {/* Mobile Menu Button */}
@@ -99,9 +125,24 @@ const Navbar = () => {
         >
           {i18n.language?.toLowerCase().startsWith('es') ? t('nav.en') : t('nav.es')}
         </Button>
-        <Button variant="hero" size="sm" asChild>
-          <a href="/auth?mode=signup">{t('nav.join')}</a>
-        </Button>
+        {user ? (
+          <>
+            <Button variant="secondary" size="sm" asChild>
+              <a href="/profile" onClick={() => setIsOpen(false)}>{t('nav.profile')}</a>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={async () => { await supabase.auth.signOut(); setIsOpen(false); }}
+            >
+              {t('nav.logout')}
+            </Button>
+          </>
+        ) : (
+          <Button variant="hero" size="sm" asChild>
+            <a href="/auth?mode=signup" onClick={() => setIsOpen(false)}>{t('nav.join')}</a>
+          </Button>
+        )}
       </div>
     </div>
   </div>
