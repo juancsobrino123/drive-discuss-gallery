@@ -74,7 +74,9 @@ const Profile = () => {
 
     if (!data) {
       // Ensure profile exists
-      await (supabase as any).from("profiles").insert({ id: uid }).catch(() => {});
+      try {
+        await (supabase as any).from("profiles").insert({ id: uid });
+      } catch {}
       setUsername("");
       setAvatarUrl(null);
     } else {
