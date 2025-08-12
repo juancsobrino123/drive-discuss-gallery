@@ -93,9 +93,14 @@ const Profile = () => {
       .update({ username })
       .eq("id", userId);
     if (error) return toast.error("Could not save username");
+
+    const { error: authErr } = await supabase.auth.updateUser({
+      data: { display_name: username },
+    });
+    if (authErr) return toast.error("Saved, but failed to sync auth display name");
+
     toast.success("Profile updated");
   };
-
   const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !userId) return;
