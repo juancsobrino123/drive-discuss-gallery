@@ -1,6 +1,4 @@
 import { useEffect } from "react";
-import Navbar from "@/components/ui/navbar";
-import Footer from "@/components/ui/footer";
 import GallerySection from "@/components/ui/gallery-section";
 import { useTranslation } from "react-i18next";
 
@@ -45,8 +43,7 @@ const Gallery = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <>
       <main>
         <header className="pt-28 pb-8 border-b border-border bg-gradient-to-b from-background/50 to-background">
           <div className="container mx-auto px-4 text-center">
@@ -70,8 +67,7 @@ const Gallery = () => {
           </div>
         </section>
       </main>
-      <Footer />
-    </div>
+    </>
   );
 };
 
