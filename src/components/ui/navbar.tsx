@@ -9,10 +9,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useToast } from "@/hooks/use-toast";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
   const { t, i18n } = useTranslation();
+  const { toast } = useToast();
 
   const navItems = [
     { label: t('nav.home'), href: '/' },
@@ -27,12 +31,47 @@ const Navbar = () => {
     try { localStorage.setItem('lang', next); } catch {}
   };
 
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      setProfile(null);
+      toast({ description: "Sesión cerrada correctamente" });
+      window.location.href = "/";
+    } catch (error) {
+      toast({ description: "Error al cerrar sesión", variant: "destructive" });
+    }
+  };
+
+  const loadProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username, avatar_url')
+        .eq('id', userId)
+        .single();
+      
+      if (!error && data) {
+        setProfile(data);
+      }
+    } catch (err) {
+      console.error('Error loading profile:', err);
+    }
+  };
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        loadProfile(session.user.id);
+      } else {
+        setProfile(null);
+      }
     });
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        loadProfile(session.user.id);
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -85,33 +124,62 @@ const Navbar = () => {
             </DropdownMenu>
           </div>
 
-{/* CTA + Language (Desktop) */}
-<div className="hidden md:flex items-center gap-2">
-  <Button
-    variant="ghost"
-    size="sm"
-    onClick={toggleLanguage}
-    aria-label={t('nav.language')}
-  >
-    {i18n.language?.toLowerCase().startsWith('es') ? t('nav.en') : t('nav.es')}
-  </Button>
+{/* CTA + User Info (Desktop) */}
+<div className="hidden md:flex items-center gap-3">
   {user ? (
     <>
+      {/* User Avatar and Name */}
+      <div className="flex items-center gap-2">
+        <Avatar className="h-8 w-8">
+          <AvatarImage 
+            src={profile?.avatar_url || ''} 
+            alt={profile?.username || user.email} 
+          />
+          <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+            {(profile?.username || user.email)?.charAt(0).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+        <span className="text-sm font-medium text-foreground">
+          {profile?.username || user.email}
+        </span>
+      </div>
+      
+      {/* Action Buttons */}
       <Button variant="secondary" size="sm" asChild>
         <a href="/profile">{t('nav.profile')}</a>
       </Button>
       <Button
         variant="ghost"
         size="sm"
-        onClick={async () => { await supabase.auth.signOut(); }}
+        onClick={handleSignOut}
       >
         {t('nav.logout')}
       </Button>
+      
+      {/* Language Toggle */}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={toggleLanguage}
+        aria-label={t('nav.language')}
+      >
+        {i18n.language?.toLowerCase().startsWith('es') ? t('nav.en') : t('nav.es')}
+      </Button>
     </>
   ) : (
-    <Button variant="hero" size="sm" asChild>
-      <a href="/auth?mode=signup">{t('nav.join')}</a>
-    </Button>
+    <>
+      <Button variant="hero" size="sm" asChild>
+        <a href="/auth?mode=signup">{t('nav.join')}</a>
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={toggleLanguage}
+        aria-label={t('nav.language')}
+      >
+        {i18n.language?.toLowerCase().startsWith('es') ? t('nav.en') : t('nav.es')}
+      </Button>
+    </>
   )}
 </div>
 
@@ -158,7 +226,27 @@ const Navbar = () => {
           Forum
         </a>
       </div>
-      <div className="flex items-center gap-3 mt-2">
+      {/* Mobile User Section */}
+      {user && (
+        <div className="border-t border-border pt-4 mt-4">
+          <div className="flex items-center gap-3 mb-3">
+            <Avatar className="h-8 w-8">
+              <AvatarImage 
+                src={profile?.avatar_url || ''} 
+                alt={profile?.username || user.email} 
+              />
+              <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                {(profile?.username || user.email)?.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-sm font-medium text-foreground">
+              {profile?.username || user.email}
+            </span>
+          </div>
+        </div>
+      )}
+      
+      <div className="flex flex-wrap items-center gap-2 mt-2">
         <Button
           variant="ghost"
           size="sm"
@@ -175,7 +263,7 @@ const Navbar = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={async () => { await supabase.auth.signOut(); setIsOpen(false); }}
+              onClick={() => { handleSignOut(); setIsOpen(false); }}
             >
               {t('nav.logout')}
             </Button>
