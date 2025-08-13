@@ -9,11 +9,7 @@ import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">(() => {
-    const params = new URLSearchParams(window.location.search);
-    const m = params.get("mode");
-    return m === "signup" ? "signup" : "signin";
-  });
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
