@@ -9,11 +9,11 @@ const Navbar = () => {
   const { t, i18n } = useTranslation();
 
   const navItems = [
-    { label: t('nav.home'), href: '#home' },
+    { label: t('nav.home'), href: '/' },
     { label: t('nav.gallery'), href: '/galeria' },
-    { label: t('nav.blog'), href: '#blog' },
-    { label: t('nav.events'), href: '#events' },
-    { label: t('nav.about'), href: '#about' },
+    { label: t('nav.blog'), href: '/blog' },
+    { label: t('nav.events'), href: '/eventos' },
+    { label: t('nav.about'), href: '/about' },
   ];
 
   const toggleLanguage = () => {
