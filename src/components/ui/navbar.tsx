@@ -50,20 +50,28 @@ const Navbar = () => {
         .eq('id', userId)
         .single();
       
+      console.log('Profile data loaded:', data, 'Error:', error);
+      
       if (!error && data) {
         setProfile(data);
       } else {
-        // If no profile exists, create one with the user's email as username
+        // If no profile exists or username is empty, try to get a better display name
         const { data: userData } = await supabase.auth.getUser();
         if (userData.user) {
-          const defaultUsername = userData.user.email?.split('@')[0] || '';
+          const displayName = userData.user.user_metadata?.display_name || 
+                            userData.user.user_metadata?.full_name || 
+                            userData.user.user_metadata?.name ||
+                            userData.user.email?.split('@')[0] || 
+                            'Usuario';
+          
+          // Try to update or insert profile with better username
           await supabase
             .from('profiles')
             .upsert({ 
               id: userId, 
-              username: defaultUsername 
+              username: displayName 
             });
-          setProfile({ username: defaultUsername, avatar_url: null });
+          setProfile({ username: displayName, avatar_url: data?.avatar_url || null });
         }
       }
     } catch (err) {
@@ -153,7 +161,7 @@ const Navbar = () => {
           </AvatarFallback>
         </Avatar>
         <span className="text-sm font-medium text-foreground">
-          {profile?.username || user.email?.split('@')[0] || user.email}
+          {(profile?.username && profile.username.trim() !== '') ? profile.username : (user.email?.split('@')[0] || user.email)}
         </span>
       </div>
       
@@ -253,7 +261,7 @@ const Navbar = () => {
               </AvatarFallback>
             </Avatar>
             <span className="text-sm font-medium text-foreground">
-              {profile?.username || user.email?.split('@')[0] || user.email}
+              {(profile?.username && profile.username.trim() !== '') ? profile.username : (user.email?.split('@')[0] || user.email)}
             </span>
           </div>
         </div>
