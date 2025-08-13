@@ -1,7 +1,5 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import Navbar from "@/components/ui/navbar";
-import Footer from "@/components/ui/footer";
 import GallerySection from "@/components/ui/gallery-section";
 
 const Gallery = () => {
@@ -44,32 +42,28 @@ const Gallery = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main>
-        <header className="pt-28 pb-8 border-b border-border bg-gradient-to-b from-background/50 to-background">
-          <div className="container mx-auto px-4 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground font-brand">
-              Galería de Eventos <span className="text-primary">AUTODEBATE</span>
-            </h1>
-            <p className="mt-4 text-muted-foreground max-w-3xl mx-auto">
-              {t('gallery.subheading')}
-            </p>
-          </div>
-        </header>
+    <main>
+      <header className="pt-28 pb-8 border-b border-border bg-gradient-to-b from-background/50 to-background">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground font-brand">
+            Galería de Eventos <span className="text-primary">AUTODEBATE</span>
+          </h1>
+          <p className="mt-4 text-muted-foreground max-w-3xl mx-auto">
+            {t('gallery.subheading')}
+          </p>
+        </div>
+      </header>
 
-        {/* Structured data for SEO */}
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      {/* Structured data for SEO */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-        <section aria-labelledby="gallery-all" className="py-8">
-          <div className="container mx-auto px-4">
-            <h2 id="gallery-all" className="sr-only">Todas las galerías</h2>
-            <GallerySection />
-          </div>
-        </section>
-      </main>
-      <Footer />
-    </div>
+      <section aria-labelledby="gallery-all" className="py-8">
+        <div className="container mx-auto px-4">
+          <h2 id="gallery-all" className="sr-only">Todas las galerías</h2>
+          <GallerySection />
+        </div>
+      </section>
+    </main>
   );
 };
 

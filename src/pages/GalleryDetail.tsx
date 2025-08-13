@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import Navbar from "@/components/ui/navbar";
-import Footer from "@/components/ui/footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -252,82 +250,78 @@ const GalleryDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main>
-        <header className="pt-28 pb-6 border-b border-border bg-gradient-to-b from-background/50 to-background">
-          <div className="container mx-auto px-4">
-            <nav className="text-sm text-muted-foreground mb-3" aria-label="breadcrumbs">
-              <Link to="/galeria" className="hover:text-foreground">Galería</Link>
-              <span className="mx-2">/</span>
-              <span className="text-foreground">{event?.title || 'Evento'}</span>
-            </nav>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground font-brand">
-              {event?.title || 'Galería de Evento'}
-            </h1>
-            <p className="mt-2 text-muted-foreground max-w-3xl">
-              {event?.description || t('gallery.subheading')}
-            </p>
-            <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-              <span className="inline-flex items-center"><Calendar className="w-4 h-4 mr-2" />{event?.event_date || '-'}</span>
-              <span className="inline-flex items-center"><MapPin className="w-4 h-4 mr-2" />{event?.location || '-'}</span>
-            </div>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <Button variant="platform" onClick={handleDownloadAll} disabled={!canDownload}>
-                <Download className="w-4 h-4 mr-2" /> Descargar todo
-              </Button>
-              {canUpload && (
-                <label className="inline-flex items-center">
-                  <input type="file" className="hidden" multiple onChange={(e) => handleUpload(e.target.files)} />
-                  <Button variant="secondary" asChild>
-                    <span><Upload className="w-4 h-4 mr-2" /> Subir fotos</span>
-                  </Button>
-                </label>
-              )}
-            </div>
+    <main>
+      <header className="pt-28 pb-6 border-b border-border bg-gradient-to-b from-background/50 to-background">
+        <div className="container mx-auto px-4">
+          <nav className="text-sm text-muted-foreground mb-3" aria-label="breadcrumbs">
+            <Link to="/galeria" className="hover:text-foreground">Galería</Link>
+            <span className="mx-2">/</span>
+            <span className="text-foreground">{event?.title || 'Evento'}</span>
+          </nav>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground font-brand">
+            {event?.title || 'Galería de Evento'}
+          </h1>
+          <p className="mt-2 text-muted-foreground max-w-3xl">
+            {event?.description || t('gallery.subheading')}
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+            <span className="inline-flex items-center"><Calendar className="w-4 h-4 mr-2" />{event?.event_date || '-'}</span>
+            <span className="inline-flex items-center"><MapPin className="w-4 h-4 mr-2" />{event?.location || '-'}</span>
           </div>
-        </header>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Button variant="platform" onClick={handleDownloadAll} disabled={!canDownload}>
+              <Download className="w-4 h-4 mr-2" /> Descargar todo
+            </Button>
+            {canUpload && (
+              <label className="inline-flex items-center">
+                <input type="file" className="hidden" multiple onChange={(e) => handleUpload(e.target.files)} />
+                <Button variant="secondary" asChild>
+                  <span><Upload className="w-4 h-4 mr-2" /> Subir fotos</span>
+                </Button>
+              </label>
+            )}
+          </div>
+        </div>
+      </header>
 
-        {/* Structured data for SEO */}
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      {/* Structured data for SEO */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-        <section className="py-8">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {photos.map((p) => (
-                <Card key={p.id} className="overflow-hidden">
-                  <img
-                    src={thumbUrls[p.id] || galleryPreview}
-                    alt={p.caption || 'Foto de evento'}
-                    className="w-full h-48 object-cover"
-                    loading="lazy"
-                  />
-                  <div className="p-2 flex items-center justify-between">
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => handleDownload(p)} disabled={!canDownload} aria-label="Descargar">
-                        <Download className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleEditCaption(p)} disabled={!(isAdmin || p.uploaded_by === user?.id)} aria-label="Editar">
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant={p.is_thumbnail ? 'default' : 'ghost'} size="icon" onClick={() => toggleThumbnail(p)} aria-label="Marcar como miniatura">
-                        <Star className={p.is_thumbnail ? 'text-primary' : ''} />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDeletePhoto(p)} disabled={!(isAdmin || p.uploaded_by === user?.id)} aria-label="Eliminar">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+      <section className="py-8">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {photos.map((p) => (
+              <Card key={p.id} className="overflow-hidden">
+                <img
+                  src={thumbUrls[p.id] || galleryPreview}
+                  alt={p.caption || 'Foto de evento'}
+                  className="w-full h-48 object-cover"
+                  loading="lazy"
+                />
+                <div className="p-2 flex items-center justify-between">
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="icon" onClick={() => handleDownload(p)} disabled={!canDownload} aria-label="Descargar">
+                      <Download className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleEditCaption(p)} disabled={!(isAdmin || p.uploaded_by === user?.id)} aria-label="Editar">
+                      <Pencil className="w-4 h-4" />
+                    </Button>
                   </div>
-                </Card>
-              ))}
-            </div>
+                  <div className="flex gap-2">
+                    <Button variant={p.is_thumbnail ? 'default' : 'ghost'} size="icon" onClick={() => toggleThumbnail(p)} aria-label="Marcar como miniatura">
+                      <Star className={p.is_thumbnail ? 'text-primary' : ''} />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDeletePhoto(p)} disabled={!(isAdmin || p.uploaded_by === user?.id)} aria-label="Eliminar">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
           </div>
-        </section>
-      </main>
-      <Footer />
-    </div>
+        </div>
+      </section>
+    </main>
   );
 };
 
