@@ -27,6 +27,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const loadProfile = async (userId: string) => {
+    console.log('Auth Provider: loadProfile started for user:', userId);
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -34,14 +35,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .eq('id', userId)
         .maybeSingle();
       
+      console.log('Auth Provider: loadProfile query result:', { data, error });
+      
       if (error) {
-        console.error('Error loading profile:', error);
+        console.error('Auth Provider: Error loading profile:', error);
         return;
       }
       
       if (data) {
+        console.log('Auth Provider: Profile found, setting profile:', data);
         setProfile(data);
       } else {
+        console.log('Auth Provider: No profile found, creating default...');
         // Create default profile
         const { data: userData } = await supabase.auth.getUser();
         if (userData.user) {
@@ -51,6 +56,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             userData.user.email?.split('@')[0] || 
                             'Usuario';
           
+          console.log('Auth Provider: Creating profile with name:', displayName);
           await supabase
             .from('profiles')
             .upsert({ 
@@ -58,29 +64,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               username: displayName 
             });
           setProfile({ username: displayName, avatar_url: null });
+          console.log('Auth Provider: Default profile created');
         }
       }
+      console.log('Auth Provider: loadProfile completed successfully');
     } catch (err) {
-      console.error('Error in loadProfile:', err);
+      console.error('Auth Provider: Error in loadProfile:', err);
     }
   };
 
   const loadRoles = async (userId: string) => {
+    console.log('Auth Provider: loadRoles started for user:', userId);
     try {
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", userId);
       
+      console.log('Auth Provider: loadRoles query result:', { data, error });
+      
       if (error) {
-        console.error("Error fetching roles", error);
+        console.error("Auth Provider: Error fetching roles", error);
         setRoles([]);
       } else {
         const userRoles = data?.map((r: any) => r.role) ?? [];
+        console.log('Auth Provider: Setting roles:', userRoles);
         setRoles(userRoles);
       }
+      console.log('Auth Provider: loadRoles completed successfully');
     } catch (err) {
-      console.error('Error in loadRoles:', err);
+      console.error('Auth Provider: Error in loadRoles:', err);
       setRoles([]);
     }
   };
