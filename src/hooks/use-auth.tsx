@@ -38,33 +38,70 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     let mounted = true;
 
     const handleAuth = async (session: Session | null) => {
-      if (!mounted) return;
+      console.log('🔧 AUTH HANDLER - Start:', { 
+        mounted, 
+        hasSession: !!session, 
+        userId: session?.user?.id,
+        userEmail: session?.user?.email 
+      });
+      
+      if (!mounted) {
+        console.log('🔧 AUTH HANDLER - Not mounted, returning');
+        return;
+      }
       
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        console.log('🔧 AUTH HANDLER - User found, loading profile and roles');
+        
         // Load profile
         try {
-          const { data: profileData } = await supabase
+          console.log('🔧 PROFILE QUERY - Starting for user:', session.user.id);
+          
+          const profileQuery = supabase
             .from('profiles')
             .select('username, avatar_url')
-            .eq('id', session.user.id)
-            .single();
+            .eq('id', session.user.id);
+          
+          console.log('🔧 PROFILE QUERY - Query built');
+          
+          const { data: profileData, error: profileError } = await profileQuery.maybeSingle();
+          
+          console.log('🔧 PROFILE QUERY - Result:', { 
+            data: profileData, 
+            error: profileError 
+          });
+          
+          if (profileError) {
+            console.error('🔧 PROFILE ERROR:', profileError);
+            throw profileError;
+          }
           
           if (profileData) {
+            console.log('🔧 PROFILE - Found profile:', profileData);
             setProfile(profileData);
           } else {
+            console.log('🔧 PROFILE - No profile found, creating one');
             // Create default profile
             const username = session.user.email?.split('@')[0] || 'Usuario';
-            await supabase.from('profiles').upsert({ 
+            
+            const { error: upsertError } = await supabase.from('profiles').upsert({ 
               id: session.user.id, 
               username 
             });
+            
+            if (upsertError) {
+              console.error('🔧 PROFILE UPSERT ERROR:', upsertError);
+            } else {
+              console.log('🔧 PROFILE - Created successfully');
+            }
+            
             setProfile({ username, avatar_url: null });
           }
         } catch (error) {
-          console.error('Profile error:', error);
+          console.error('🔧 PROFILE - Catch error:', error);
           // Set fallback profile
           const username = session.user.email?.split('@')[0] || 'Usuario';
           setProfile({ username, avatar_url: null });
@@ -72,22 +109,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         // Load roles
         try {
-          const { data: rolesData } = await supabase
+          console.log('🔧 ROLES QUERY - Starting for user:', session.user.id);
+          
+          const rolesQuery = supabase
             .from("user_roles")
             .select("role")
             .eq("user_id", session.user.id);
           
-          setRoles(rolesData?.map((r: any) => r.role) ?? []);
+          console.log('🔧 ROLES QUERY - Query built');
+          
+          const { data: rolesData, error: rolesError } = await rolesQuery;
+          
+          console.log('🔧 ROLES QUERY - Result:', { 
+            data: rolesData, 
+            error: rolesError 
+          });
+          
+          if (rolesError) {
+            console.error('🔧 ROLES ERROR:', rolesError);
+            throw rolesError;
+          }
+          
+          const rolesList = rolesData?.map((r: any) => r.role) ?? [];
+          console.log('🔧 ROLES - Final roles list:', rolesList);
+          setRoles(rolesList);
         } catch (error) {
-          console.error('Roles error:', error);
+          console.error('🔧 ROLES - Catch error:', error);
           setRoles([]);
         }
       } else {
+        console.log('🔧 AUTH HANDLER - No user, clearing profile and roles');
         setProfile(null);
         setRoles([]);
       }
       
       if (mounted) {
+        console.log('🔧 AUTH HANDLER - Setting loading to false');
         setLoading(false);
       }
     };
