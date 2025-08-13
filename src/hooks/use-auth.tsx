@@ -25,6 +25,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const loadProfile = async (userId: string) => {
+    console.log('AuthProvider: Loading profile for user:', userId);
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -32,9 +33,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .eq('id', userId)
         .maybeSingle();
       
+      console.log('AuthProvider: Profile query result:', { data, error });
+      
       if (!error && data) {
+        console.log('AuthProvider: Setting profile data:', data);
         setProfile(data);
       } else {
+        console.log('AuthProvider: No profile found, creating default profile');
         const { data: userData } = await supabase.auth.getUser();
         if (userData.user) {
           const displayName = userData.user.user_metadata?.display_name || 
@@ -43,6 +48,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                             userData.user.email?.split('@')[0] || 
                             'Usuario';
           
+          console.log('AuthProvider: Creating profile with display name:', displayName);
           await supabase
             .from('profiles')
             .upsert({ 
@@ -53,25 +59,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       }
     } catch (err) {
-      console.error('Error loading profile:', err);
+      console.error('AuthProvider: Error loading profile:', err);
     }
   };
 
   const loadRoles = async (userId: string) => {
+    console.log('AuthProvider: Loading roles for user:', userId);
     try {
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", userId);
       
+      console.log('AuthProvider: Roles query result:', { data, error });
+      
       if (error) {
-        console.error("Error fetching roles", error);
+        console.error("AuthProvider: Error fetching roles", error);
         setRoles([]);
       } else {
-        setRoles(data?.map((r: any) => r.role) ?? []);
+        const userRoles = data?.map((r: any) => r.role) ?? [];
+        console.log('AuthProvider: Setting roles:', userRoles);
+        setRoles(userRoles);
       }
     } catch (err) {
-      console.error('Error loading roles:', err);
+      console.error('AuthProvider: Error loading roles:', err);
       setRoles([]);
     }
   };
@@ -101,46 +112,64 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
+    console.log('AuthProvider: useEffect starting...');
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('AuthProvider: Auth state changed', { event, session: !!session, mounted });
         if (!mounted) return;
         
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          await Promise.all([
-            loadProfile(session.user.id),
-            loadRoles(session.user.id)
-          ]);
+          console.log('AuthProvider: Loading profile and roles for user:', session.user.id);
+          try {
+            await Promise.all([
+              loadProfile(session.user.id),
+              loadRoles(session.user.id)
+            ]);
+          } catch (error) {
+            console.error('AuthProvider: Error loading profile/roles:', error);
+          }
         } else {
+          console.log('AuthProvider: No session, clearing data');
           setProfile(null);
           setRoles([]);
         }
         
+        console.log('AuthProvider: Setting loading to false');
         setLoading(false);
       }
     );
 
     // Check initial session
+    console.log('AuthProvider: Checking initial session...');
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log('AuthProvider: Initial session check', { session: !!session, mounted });
       if (!mounted) return;
       
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        await Promise.all([
-          loadProfile(session.user.id),
-          loadRoles(session.user.id)
-        ]);
+        console.log('AuthProvider: Loading initial profile and roles for user:', session.user.id);
+        try {
+          await Promise.all([
+            loadProfile(session.user.id),
+            loadRoles(session.user.id)
+          ]);
+        } catch (error) {
+          console.error('AuthProvider: Error loading initial profile/roles:', error);
+        }
       }
       
+      console.log('AuthProvider: Setting initial loading to false');
       setLoading(false);
     });
 
     return () => {
+      console.log('AuthProvider: Cleanup');
       mounted = false;
       subscription.unsubscribe();
     };
@@ -150,6 +179,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const canUpload = roles.includes("copiloto") || roles.includes("admin");
   const isAdmin = roles.includes("admin");
   const canDownload = roles.length > 0;
+
+  console.log('AuthProvider: Current state', { 
+    user: !!user, 
+    profile: !!profile, 
+    roles, 
+    loading, 
+    canCreateEvent, 
+    canUpload, 
+    isAdmin, 
+    canDownload 
+  });
 
   return (
     <AuthContext.Provider value={{

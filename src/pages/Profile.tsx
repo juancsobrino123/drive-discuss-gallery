@@ -29,7 +29,16 @@ function setCanonical(href: string) {
 }
 
 const Profile = () => {
-  const { user, profile, signOut: authSignOut, loading: authLoading } = useAuth();
+  console.log('Profile: Component rendering...');
+  const authContext = useAuth();
+  console.log('Profile: Auth context received:', {
+    user: !!authContext.user,
+    profile: !!authContext.profile,
+    loading: authContext.loading,
+    roles: authContext.roles
+  });
+  
+  const { user, profile, signOut: authSignOut, loading: authLoading } = authContext;
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -43,7 +52,9 @@ const Profile = () => {
 
   // Load profile data when user/profile changes
   useEffect(() => {
+    console.log('Profile: useEffect triggered', { profile });
     if (profile) {
+      console.log('Profile: Setting local state from context', profile);
       setUsername(profile.username || "");
       setAvatarUrl(profile.avatar_url || null);
     }
