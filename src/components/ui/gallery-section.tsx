@@ -94,16 +94,22 @@ const [newEvent, setNewEvent] = useState({ title: "", date: "", location: "", de
   // Load events from Supabase
   useEffect(() => {
     const loadEvents = async () => {
-      const { data, error } = await supabase
-        .from("events")
-        .select("id, title, description, event_date, location, created_by")
-        .order("event_date", { ascending: false });
-      if (error) {
-        console.error(error);
-        toast({ description: "Error cargando eventos" });
-        return;
+      console.log('Loading events...');
+      try {
+        const { data, error } = await supabase
+          .from("events")
+          .select("id, title, description, event_date, location, created_by")
+          .order("created_at", { ascending: false });
+        if (error) {
+          console.error('Error loading events:', error);
+          toast({ description: "Error cargando eventos" });
+          return;
+        }
+        console.log('Events loaded successfully:', data);
+        setEvents(data as EventItem[]);
+      } catch (err) {
+        console.error('Unexpected error:', err);
       }
-      setEvents(data as EventItem[]);
     };
     loadEvents();
   }, [toast]);
