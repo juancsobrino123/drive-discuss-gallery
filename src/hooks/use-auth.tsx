@@ -1,11 +1,11 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  profile: any;
+  profile: { username: string; avatar_url: string | null } | null;
   roles: string[];
   loading: boolean;
   canCreateEvent: boolean;
@@ -17,15 +17,14 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<{ username: string; avatar_url: string | null } | null>(null);
   const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadProfile = async (userId: string) => {
-    console.log('AuthProvider: Loading profile for user:', userId);
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -33,13 +32,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .eq('id', userId)
         .maybeSingle();
       
-      console.log('AuthProvider: Profile query result:', { data, error });
+      if (error) {
+        console.error('Error loading profile:', error);
+        return;
+      }
       
-      if (!error && data) {
-        console.log('AuthProvider: Setting profile data:', data);
+      if (data) {
         setProfile(data);
       } else {
-        console.log('AuthProvider: No profile found, creating default profile');
+        // Create default profile
         const { data: userData } = await supabase.auth.getUser();
         if (userData.user) {
           const displayName = userData.user.user_metadata?.display_name || 
@@ -48,55 +49,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                             userData.user.email?.split('@')[0] || 
                             'Usuario';
           
-          console.log('AuthProvider: Creating profile with display name:', displayName);
           await supabase
             .from('profiles')
             .upsert({ 
               id: userId, 
               username: displayName 
             });
-          setProfile({ username: displayName, avatar_url: data?.avatar_url || null });
+          setProfile({ username: displayName, avatar_url: null });
         }
       }
     } catch (err) {
-      console.error('AuthProvider: Error loading profile:', err);
+      console.error('Error in loadProfile:', err);
     }
   };
 
   const loadRoles = async (userId: string) => {
-    console.log('AuthProvider: Loading roles for user:', userId);
     try {
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", userId);
       
-      console.log('AuthProvider: Roles query result:', { data, error });
-      
       if (error) {
-        console.error("AuthProvider: Error fetching roles", error);
+        console.error("Error fetching roles", error);
         setRoles([]);
       } else {
         const userRoles = data?.map((r: any) => r.role) ?? [];
-        console.log('AuthProvider: Setting roles:', userRoles);
         setRoles(userRoles);
       }
     } catch (err) {
-      console.error('AuthProvider: Error loading roles:', err);
+      console.error('Error in loadRoles:', err);
       setRoles([]);
     }
   };
 
   const signOut = async () => {
     try {
-      console.log('AuthProvider: Starting sign out...');
       const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('AuthProvider: Sign out error:', error);
-        throw error;
-      }
+      if (error) throw error;
       
-      console.log('AuthProvider: Sign out successful, clearing state...');
       // Clear all state
       setUser(null);
       setSession(null);
@@ -105,108 +96,73 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       return Promise.resolve();
     } catch (error) {
-      console.error('AuthProvider: Sign out failed:', error);
+      console.error('Sign out failed:', error);
       throw error;
     }
   };
 
   useEffect(() => {
     let mounted = true;
-    console.log('AuthProvider: useEffect starting...');
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('AuthProvider: Auth state changed', { event, session: !!session, mounted });
-        if (!mounted) return;
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          console.log('AuthProvider: Loading profile and roles for user:', session.user.id);
-          try {
-            await Promise.all([
-              loadProfile(session.user.id),
-              loadRoles(session.user.id)
-            ]);
-          } catch (error) {
-            console.error('AuthProvider: Error loading profile/roles:', error);
-          }
-        } else {
-          console.log('AuthProvider: No session, clearing data');
-          setProfile(null);
-          setRoles([]);
-        }
-        
-        console.log('AuthProvider: Setting loading to false');
-        setLoading(false);
-      }
-    );
-
-    // Check initial session
-    console.log('AuthProvider: Checking initial session...');
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log('AuthProvider: Initial session check', { session: !!session, mounted });
+    const handleAuthChange = async (event: string, session: Session | null) => {
       if (!mounted) return;
       
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        console.log('AuthProvider: Loading initial profile and roles for user:', session.user.id);
         try {
-          await Promise.all([
-            loadProfile(session.user.id),
-            loadRoles(session.user.id)
-          ]);
+          await loadProfile(session.user.id);
+          await loadRoles(session.user.id);
         } catch (error) {
-          console.error('AuthProvider: Error loading initial profile/roles:', error);
+          console.error('Error loading user data:', error);
         }
+      } else {
+        setProfile(null);
+        setRoles([]);
       }
       
-      console.log('AuthProvider: Setting initial loading to false');
-      setLoading(false);
+      if (mounted) {
+        setLoading(false);
+      }
+    };
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
+
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (mounted) {
+        handleAuthChange('INITIAL_SESSION', session);
+      }
     });
 
     return () => {
-      console.log('AuthProvider: Cleanup');
       mounted = false;
       subscription.unsubscribe();
     };
   }, []);
 
+  // Compute permission flags
   const canCreateEvent = roles.includes("copiloto") || roles.includes("admin");
   const canUpload = roles.includes("copiloto") || roles.includes("admin");
   const isAdmin = roles.includes("admin");
-  const canDownload = roles.length > 0;
+  const canDownload = roles.length > 0; // Any authenticated user with roles can download
 
-  console.log('AuthProvider: Current state', { 
-    user: !!user, 
-    profile: !!profile, 
-    roles, 
-    loading, 
-    canCreateEvent, 
-    canUpload, 
-    isAdmin, 
-    canDownload 
-  });
+  const value: AuthContextType = {
+    user,
+    session,
+    profile,
+    roles,
+    loading,
+    canCreateEvent,
+    canUpload,
+    isAdmin,
+    canDownload,
+    signOut,
+  };
 
-  return (
-    <AuthContext.Provider value={{
-      user,
-      session,
-      profile,
-      roles,
-      loading,
-      canCreateEvent,
-      canUpload,
-      isAdmin,
-      canDownload,
-      signOut
-    }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
