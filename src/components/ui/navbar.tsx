@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -11,7 +17,6 @@ const Navbar = () => {
   const navItems = [
     { label: t('nav.home'), href: '/' },
     { label: t('nav.gallery'), href: '/galeria' },
-    { label: t('nav.blog'), href: '/blog' },
     { label: t('nav.events'), href: '/eventos' },
     { label: t('nav.about'), href: '/about' },
   ];
@@ -59,6 +64,25 @@ const Navbar = () => {
                 {item.label}
               </a>
             ))}
+            
+            {/* News Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors duration-300 font-medium">
+                News <ChevronDown className="h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-background border border-border">
+                <DropdownMenuItem asChild>
+                  <a href="/blog" className="cursor-pointer text-foreground hover:text-primary">
+                    Blog
+                  </a>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <a href="/forum" className="cursor-pointer text-foreground hover:text-primary">
+                    Forum
+                  </a>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
 {/* CTA + Language (Desktop) */}
@@ -116,6 +140,24 @@ const Navbar = () => {
           {item.label}
         </a>
       ))}
+      
+      {/* Mobile News Items */}
+      <div className="border-t border-border pt-2 mt-2">
+        <a
+          href="/blog"
+          className="text-muted-foreground hover:text-primary transition-colors duration-300 font-medium py-2 block"
+          onClick={() => setIsOpen(false)}
+        >
+          Blog
+        </a>
+        <a
+          href="/forum"
+          className="text-muted-foreground hover:text-primary transition-colors duration-300 font-medium py-2 block"
+          onClick={() => setIsOpen(false)}
+        >
+          Forum
+        </a>
+      </div>
       <div className="flex items-center gap-3 mt-2">
         <Button
           variant="ghost"
