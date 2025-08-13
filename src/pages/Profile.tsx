@@ -28,7 +28,7 @@ function setCanonical(href: string) {
 }
 
 const Profile = () => {
-  const { user, profile, loading: authLoading, signOut: authSignOut } = useAuth();
+  const { user, profile, loading: authLoading, signOut: authSignOut, reloadProfile } = useAuth();
   const [username, setUsername] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [loading, setLoading] = useState(false);
@@ -81,6 +81,9 @@ const Profile = () => {
       });
 
       toast.success("Perfil actualizado correctamente");
+      
+      // Recargar el perfil desde la base de datos
+      await reloadProfile();
     } catch (error) {
       console.error('Unexpected error:', error);
       toast.error("Error inesperado al guardar");
@@ -122,7 +125,10 @@ const Profile = () => {
       }
 
       setAvatarUrl(url || "");
-      toast.success("Avatar updated");
+      toast.success("Avatar actualizado");
+      
+      // Recargar el perfil desde la base de datos
+      await reloadProfile();
     } catch (error) {
       console.error('Unexpected error:', error);
       toast.error("An unexpected error occurred");

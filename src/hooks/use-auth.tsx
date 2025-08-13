@@ -13,6 +13,7 @@ interface AuthContextType {
   isAdmin: boolean;
   canDownload: boolean;
   signOut: () => Promise<void>;
+  reloadProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,19 +33,66 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setRoles([]);
   };
 
+  // Función para recargar el perfil desde la base de datos
+  const reloadProfile = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('username, avatar_url')
+        .eq('id', user.id)
+        .maybeSingle();
+      
+      if (profileData) {
+        setProfile(profileData);
+      }
+    } catch (error) {
+      console.error('Error reloading profile:', error);
+    }
+  };
+
   useEffect(() => {
     // Función simple para manejar cambios de autenticación
-    const handleAuthChange = (session: Session | null) => {
+    const handleAuthChange = async (session: Session | null) => {
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        // Crear perfil básico inmediatamente
-        const username = session.user.email?.split('@')[0] || 'Usuario';
-        setProfile({ username, avatar_url: null });
+        // Intentar cargar perfil real de la base de datos
+        try {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('username, avatar_url')
+            .eq('id', session.user.id)
+            .maybeSingle();
+          
+          if (profileData) {
+            setProfile(profileData);
+          } else {
+            // Crear perfil básico si no existe
+            const username = session.user.email?.split('@')[0] || 'Usuario';
+            setProfile({ username, avatar_url: null });
+          }
+        } catch (error) {
+          console.error('Error loading profile:', error);
+          // Fallback perfil básico
+          const username = session.user.email?.split('@')[0] || 'Usuario';
+          setProfile({ username, avatar_url: null });
+        }
         
-        // Establecer roles básicos
-        setRoles(['general']);
+        // Cargar roles reales
+        try {
+          const { data: rolesData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', session.user.id);
+          
+          setRoles(rolesData?.map((r: any) => r.role) ?? ['general']);
+        } catch (error) {
+          console.error('Error loading roles:', error);
+          setRoles(['general']);
+        }
       } else {
         setProfile(null);
         setRoles([]);
@@ -83,6 +131,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isAdmin,
     canDownload,
     signOut,
+    reloadProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
