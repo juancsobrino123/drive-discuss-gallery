@@ -11,6 +11,7 @@ import Events from "./pages/Events";
 import About from "./pages/About";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
+import GalleryDetail from "./pages/GalleryDetail";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/galeria" element={<Gallery />} />
+          <Route path="/galeria/:eventId" element={<GalleryDetail />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/eventos" element={<Events />} />
           <Route path="/about" element={<About />} />

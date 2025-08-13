@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Download, Eye, Calendar, MapPin, Plus, Upload, Trash2, Pencil } from "lucide-react";
 import galleryPreview from "@/assets/gallery-preview.jpg";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
 // Minimal local types (Supabase types file doesn't include these yet)
 interface EventItem {
@@ -27,6 +28,7 @@ interface PhotoItem {
   thumbnail_path: string | null;
   caption: string | null;
   uploaded_by: string;
+  is_thumbnail?: boolean;
 }
 
 const useRoles = () => {
@@ -78,13 +80,14 @@ const useRoles = () => {
 const GallerySection = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const [events, setEvents] = useState<EventItem[]>([]);
-  const [photosByEvent, setPhotosByEvent] = useState<Record<string, PhotoItem[]>>({});
-  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [newEvent, setNewEvent] = useState({ title: "", date: "", location: "", description: "" });
+const [events, setEvents] = useState<EventItem[]>([]);
+const [photosByEvent, setPhotosByEvent] = useState<Record<string, PhotoItem[]>>({});
+const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
+const [previewByEvent, setPreviewByEvent] = useState<Record<string, PhotoItem[]>>({});
+const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({});
+const [creating, setCreating] = useState(false);
+const [uploading, setUploading] = useState(false);
+const [newEvent, setNewEvent] = useState({ title: "", date: "", location: "", description: "" });
 
   const { canCreateEvent, canUpload, isAdmin, canDownload, userId } = useRoles();
 
@@ -134,6 +137,38 @@ const GallerySection = () => {
     }
     setPhotoUrls((prev) => ({ ...prev, ...newUrls }));
   };
+
+  // Load preview thumbnails (prioritize is_thumbnail, fallback to first photos)
+  const loadPreview = async (eventId: string) => {
+    const { data, error } = await supabase
+      .from('photos')
+      .select('id, event_id, storage_path, thumbnail_path, caption, uploaded_by, is_thumbnail')
+      .eq('event_id', eventId)
+      .order('is_thumbnail', { ascending: false })
+      .order('created_at', { ascending: true })
+      .limit(4);
+    if (error) {
+      console.error(error);
+      return;
+    }
+    const items = (data || []) as PhotoItem[];
+    setPreviewByEvent((prev) => ({ ...prev, [eventId]: items }));
+    const newUrls: Record<string, string> = {};
+    for (const p of items) {
+      if (p.thumbnail_path) {
+        const { data: pub } = supabase.storage.from('gallery-thumbs').getPublicUrl(p.thumbnail_path);
+        if (pub?.publicUrl) newUrls[p.id] = pub.publicUrl;
+      } else {
+        newUrls[p.id] = galleryPreview;
+      }
+    }
+    setPreviewUrls((prev) => ({ ...prev, ...newUrls }));
+  };
+
+  // Load previews when events change
+  useEffect(() => {
+    events.forEach((e) => loadPreview(e.id));
+  }, [events]);
 
   const handleCreateEvent = async () => {
     try {
@@ -260,8 +295,6 @@ const handleDownload = async (photo: PhotoItem) => {
     try {
       const { error } = await supabase.from('events').delete().eq('id', eventId);
       if (error) throw error;
-      toast({ description: 'Evento eliminado' });
-      if (selectedEventId === eventId) setSelectedEventId(null);
       const { data } = await supabase
         .from('events')
         .select('id, title, description, event_date, location, created_by')
@@ -394,6 +427,28 @@ const handleDownload = async (photo: PhotoItem) => {
               key={event.id}
               className={`p-6 hover:shadow-royal transition-all duration-300 transform hover:-translate-y-2 bg-gradient-card`}
             >
+<div className="mb-3">
+                <div className="grid grid-cols-2 gap-1 h-40">
+                  {(previewByEvent[event.id] || []).slice(0, 4).map((p) => (
+                    <img
+                      key={p.id}
+                      src={previewUrls[p.id] || galleryPreview}
+                      alt={p.caption || 'Miniatura de evento'}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  ))}
+                  {Array.from({ length: Math.max(0, 4 - (previewByEvent[event.id]?.length || 0)) }).map((_, idx) => (
+                    <img
+                      key={`placeholder-${idx}`}
+                      src={galleryPreview}
+                      alt="Miniatura de evento"
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  ))}
+                </div>
+              </div>
               <h3 className="text-lg font-bold text-foreground mb-3 line-clamp-2">
                 {event.title}
               </h3>
@@ -410,9 +465,9 @@ const handleDownload = async (photo: PhotoItem) => {
 
               <div className="flex items-center justify-between">
                 <div className="flex gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => { setSelectedEventId(event.id); loadPhotos(event.id); }} aria-label="Ver fotos">
-                    <Eye className="w-4 h-4" />
-                  </Button>
+<Button variant="ghost" size="sm" asChild aria-label="Ver galería">
+                      <Link to={`/galeria/${event.id}`}><Eye className="w-4 h-4" /></Link>
+                    </Button>
                   {canUpload && (
                     <label className="inline-flex items-center">
                       <input type="file" className="hidden" multiple onChange={(e) => handleUpload(event.id, e.target.files)} />
@@ -437,37 +492,6 @@ const handleDownload = async (photo: PhotoItem) => {
           ))}
         </div>
 
-        {/* Photos of selected event */}
-        {selectedEventId && (
-          <div className="mt-10">
-            <h3 className="text-2xl font-bold text-foreground mb-4">Fotos</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {(photosByEvent[selectedEventId] || []).map((p) => (
-                <Card key={p.id} className="overflow-hidden">
-                  <img
-                    src={photoUrls[p.id]}
-                    alt={p.caption || 'Foto de evento'}
-                    className="w-full h-48 object-cover"
-                    loading="lazy"
-                  />
-                  <div className="p-2 flex items-center justify-between">
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => handleDownload(p)} disabled={!canDownload} aria-label="Descargar">
-                        <Download className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleEditCaption(p)} disabled={!(isAdmin || p.uploaded_by === userId)} aria-label="Editar">
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeletePhoto(p)} disabled={uploading || !(isAdmin || p.uploaded_by === userId)} aria-label="Eliminar">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Gallery Features */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center mt-12">

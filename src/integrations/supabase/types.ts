@@ -53,6 +53,7 @@ export type Database = {
           created_at: string
           event_id: string
           id: string
+          is_thumbnail: boolean
           storage_path: string
           thumbnail_path: string | null
           updated_at: string
@@ -63,6 +64,7 @@ export type Database = {
           created_at?: string
           event_id: string
           id?: string
+          is_thumbnail?: boolean
           storage_path: string
           thumbnail_path?: string | null
           updated_at?: string
@@ -73,6 +75,7 @@ export type Database = {
           created_at?: string
           event_id?: string
           id?: string
+          is_thumbnail?: boolean
           storage_path?: string
           thumbnail_path?: string | null
           updated_at?: string
