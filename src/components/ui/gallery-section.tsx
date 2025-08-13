@@ -94,38 +94,44 @@ const GallerySection = () => {
 
   // Load events from Supabase
   useEffect(() => {
+    let isMounted = true;
+    
     const loadEvents = async () => {
-      console.log('Loading events...');
+      if (!isMounted) return;
+      
       setLoadingEvents(true);
       try {
-        console.log('Starting to load events...');
         const { data, error } = await supabase
           .from("events")
           .select("id, title, description, event_date, location, created_by")
           .order("created_at", { ascending: false });
         
-        console.log('Query result:', { data, error });
-        console.log('Loading events finished, setting loadingEvents to false');
+        if (!isMounted) return;
         
         if (error) {
           console.error('Error loading events:', error);
           toast({ description: "Error cargando eventos: " + error.message, variant: "destructive" });
           setEvents([]);
         } else {
-          console.log('Events loaded successfully:', data);
-          console.log('Number of events:', data?.length || 0);
           setEvents(data || []);
         }
       } catch (err) {
+        if (!isMounted) return;
         console.error('Unexpected error:', err);
         toast({ description: "Error inesperado cargando eventos", variant: "destructive" });
         setEvents([]);
       } finally {
-        console.log('Setting loadingEvents to false');
-        setLoadingEvents(false);
+        if (isMounted) {
+          setLoadingEvents(false);
+        }
       }
     };
+    
     loadEvents();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [toast]);
 
   // Load photos for selected event
@@ -187,11 +193,14 @@ const GallerySection = () => {
 
   // Load previews when events change
   useEffect(() => {
-    console.log('Events changed, loading previews for:', events.length, 'events');
-    events.forEach((e) => {
-      console.log('Loading preview for event:', e.id, e.title);
-      loadPreview(e.id);
-    });
+    if (events.length === 0) return;
+    
+    const loadPreviews = async () => {
+      const promises = events.map(event => loadPreview(event.id));
+      await Promise.all(promises);
+    };
+    
+    loadPreviews();
   }, [events]);
 
   const handleCreateEvent = async () => {
