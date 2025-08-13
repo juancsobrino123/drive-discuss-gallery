@@ -80,13 +80,6 @@ export type Database = {
             referencedRelation: "blog_posts"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "comments_blog_post_id_fkey"
-            columns: ["blog_post_id"]
-            isOneToOne: false
-            referencedRelation: "blog_posts_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       events: {
@@ -153,13 +146,6 @@ export type Database = {
             columns: ["thread_id"]
             isOneToOne: false
             referencedRelation: "forum_threads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "forum_replies_thread_id_fkey"
-            columns: ["thread_id"]
-            isOneToOne: false
-            referencedRelation: "forum_threads_public"
             referencedColumns: ["id"]
           },
         ]
@@ -236,13 +222,6 @@ export type Database = {
             referencedRelation: "events"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "photos_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       profiles: {
@@ -292,239 +271,17 @@ export type Database = {
       }
     }
     Views: {
-      blog_posts_public: {
-        Row: {
-          author_id: string | null
-          content: string | null
-          created_at: string | null
-          excerpt: string | null
-          id: string | null
-          published: boolean | null
-          title: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          author_id?: never
-          content?: string | null
-          created_at?: string | null
-          excerpt?: string | null
-          id?: string | null
-          published?: boolean | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          author_id?: never
-          content?: string | null
-          created_at?: string | null
-          excerpt?: string | null
-          id?: string | null
-          published?: boolean | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      comments_public: {
-        Row: {
-          author_id: string | null
-          blog_post_id: string | null
-          content: string | null
-          created_at: string | null
-          id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          author_id?: never
-          blog_post_id?: string | null
-          content?: string | null
-          created_at?: string | null
-          id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          author_id?: never
-          blog_post_id?: string | null
-          content?: string | null
-          created_at?: string | null
-          id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "comments_blog_post_id_fkey"
-            columns: ["blog_post_id"]
-            isOneToOne: false
-            referencedRelation: "blog_posts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "comments_blog_post_id_fkey"
-            columns: ["blog_post_id"]
-            isOneToOne: false
-            referencedRelation: "blog_posts_public"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      events_public: {
-        Row: {
-          created_at: string | null
-          created_by: string | null
-          description: string | null
-          event_date: string | null
-          id: string | null
-          location: string | null
-          title: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          created_by?: never
-          description?: string | null
-          event_date?: string | null
-          id?: string | null
-          location?: string | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          created_by?: never
-          description?: string | null
-          event_date?: string | null
-          id?: string | null
-          location?: string | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      forum_replies_public: {
-        Row: {
-          author_id: string | null
-          content: string | null
-          created_at: string | null
-          id: string | null
-          thread_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          author_id?: never
-          content?: string | null
-          created_at?: string | null
-          id?: string | null
-          thread_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          author_id?: never
-          content?: string | null
-          created_at?: string | null
-          id?: string | null
-          thread_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "forum_replies_thread_id_fkey"
-            columns: ["thread_id"]
-            isOneToOne: false
-            referencedRelation: "forum_threads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "forum_replies_thread_id_fkey"
-            columns: ["thread_id"]
-            isOneToOne: false
-            referencedRelation: "forum_threads_public"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      forum_threads_public: {
-        Row: {
-          author_id: string | null
-          content: string | null
-          created_at: string | null
-          id: string | null
-          pinned: boolean | null
-          title: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          author_id?: never
-          content?: string | null
-          created_at?: string | null
-          id?: string | null
-          pinned?: boolean | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          author_id?: never
-          content?: string | null
-          created_at?: string | null
-          id?: string | null
-          pinned?: boolean | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      photos_public: {
-        Row: {
-          caption: string | null
-          created_at: string | null
-          event_id: string | null
-          id: string | null
-          is_thumbnail: boolean | null
-          storage_path: string | null
-          thumbnail_path: string | null
-          updated_at: string | null
-          uploaded_by: string | null
-        }
-        Insert: {
-          caption?: string | null
-          created_at?: string | null
-          event_id?: string | null
-          id?: string | null
-          is_thumbnail?: boolean | null
-          storage_path?: never
-          thumbnail_path?: never
-          updated_at?: string | null
-          uploaded_by?: never
-        }
-        Update: {
-          caption?: string | null
-          created_at?: string | null
-          event_id?: string | null
-          id?: string | null
-          is_thumbnail?: boolean | null
-          storage_path?: never
-          thumbnail_path?: never
-          updated_at?: string | null
-          uploaded_by?: never
-        }
-        Relationships: [
-          {
-            foreignKeyName: "photos_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "photos_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events_public"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
+      can_see_author_info: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
+      can_see_storage_info: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       get_masked_author_info: {
         Args: { user_id_field: string; current_user_id?: string }
         Returns: string
