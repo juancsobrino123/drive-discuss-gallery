@@ -52,6 +52,19 @@ const Navbar = () => {
       
       if (!error && data) {
         setProfile(data);
+      } else {
+        // If no profile exists, create one with the user's email as username
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData.user) {
+          const defaultUsername = userData.user.email?.split('@')[0] || '';
+          await supabase
+            .from('profiles')
+            .upsert({ 
+              id: userId, 
+              username: defaultUsername 
+            });
+          setProfile({ username: defaultUsername, avatar_url: null });
+        }
       }
     } catch (err) {
       console.error('Error loading profile:', err);
@@ -140,7 +153,7 @@ const Navbar = () => {
           </AvatarFallback>
         </Avatar>
         <span className="text-sm font-medium text-foreground">
-          {profile?.username || user.email}
+          {profile?.username || user.email?.split('@')[0] || user.email}
         </span>
       </div>
       
@@ -240,7 +253,7 @@ const Navbar = () => {
               </AvatarFallback>
             </Avatar>
             <span className="text-sm font-medium text-foreground">
-              {profile?.username || user.email}
+              {profile?.username || user.email?.split('@')[0] || user.email}
             </span>
           </div>
         </div>
