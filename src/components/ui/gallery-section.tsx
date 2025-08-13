@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Download, Eye, Calendar, MapPin, Plus, Upload, Trash2, Pencil } from "lucide-react";
 import galleryPreview from "@/assets/gallery-preview.jpg";
 import { useTranslation } from "react-i18next";
@@ -32,12 +32,14 @@ interface PhotoItem {
 const useRoles = () => {
   const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
     const load = async () => {
       const { data: sessionData } = await supabase.auth.getSession();
-      const uid = sessionData.session?.user?.id;
+      const uid = sessionData.session?.user?.id ?? null;
+      if (mounted) setUserId(uid);
       if (!uid) {
         if (mounted) {
           setRoles([]);
@@ -70,7 +72,7 @@ const useRoles = () => {
   const isAdmin = roles.includes("admin");
   const canDownload = roles.length > 0; // any authenticated role
 
-  return { roles, loading, canCreateEvent, canUpload, isAdmin, canDownload };
+  return { roles, loading, userId, canCreateEvent, canUpload, isAdmin, canDownload };
 };
 
 const GallerySection = () => {
@@ -84,7 +86,7 @@ const GallerySection = () => {
   const [uploading, setUploading] = useState(false);
   const [newEvent, setNewEvent] = useState({ title: "", date: "", location: "", description: "" });
 
-  const { canCreateEvent, canUpload, isAdmin, canDownload } = useRoles();
+  const { canCreateEvent, canUpload, isAdmin, canDownload, userId } = useRoles();
 
   // Load events from Supabase
   useEffect(() => {
@@ -221,7 +223,7 @@ const GallerySection = () => {
     }
   };
 
-  const handleDownload = async (photo: PhotoItem) => {
+const handleDownload = async (photo: PhotoItem) => {
     try {
       if (!canDownload) {
         toast({ description: "Inicia sesión para descargar" });
@@ -235,6 +237,67 @@ const GallerySection = () => {
     } catch (e: any) {
       console.error(e);
       toast({ description: e.message || "No se pudo descargar" });
+    }
+  };
+
+  const handleEditCaption = async (photo: PhotoItem) => {
+    const value = window.prompt('Editar descripción', photo.caption || '')?.trim();
+    if (value === undefined) return; // cancel
+    try {
+      const { error } = await supabase.from('photos').update({ caption: value || null }).eq('id', photo.id);
+      if (error) throw error;
+      toast({ description: 'Descripción actualizada' });
+      await loadPhotos(photo.event_id);
+    } catch (e: any) {
+      console.error(e);
+      toast({ description: e.message || 'No se pudo actualizar' });
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    if (!isAdmin) return;
+    if (!window.confirm('¿Eliminar evento y todas sus fotos?')) return;
+    try {
+      const { error } = await supabase.from('events').delete().eq('id', eventId);
+      if (error) throw error;
+      toast({ description: 'Evento eliminado' });
+      if (selectedEventId === eventId) setSelectedEventId(null);
+      const { data } = await supabase
+        .from('events')
+        .select('id, title, description, event_date, location, created_by')
+        .order('event_date', { ascending: false });
+      setEvents((data || []) as EventItem[]);
+    } catch (e: any) {
+      console.error(e);
+      toast({ description: e.message || 'No se pudo eliminar el evento' });
+    }
+  };
+
+  const handleDownloadAll = async (eventId: string) => {
+    if (!canDownload) {
+      toast({ description: 'Inicia sesión para descargar' });
+      return;
+    }
+    try {
+      let list = photosByEvent[eventId];
+      if (!list) {
+        const { data, error } = await supabase
+          .from('photos')
+          .select('id, storage_path')
+          .eq('event_id', eventId);
+        if (error) throw error;
+        list = data as PhotoItem[];
+      }
+      for (const p of list) {
+        const { data, error } = await supabase.storage.from('gallery').createSignedUrl(p.storage_path, 60);
+        if (!error && data?.signedUrl) {
+          window.open(data.signedUrl, '_blank');
+          await new Promise((r) => setTimeout(r, 300));
+        }
+      }
+    } catch (e: any) {
+      console.error(e);
+      toast({ description: e.message || 'No se pudo descargar todo' });
     }
   };
 
@@ -347,21 +410,28 @@ const GallerySection = () => {
 
               <div className="flex items-center justify-between">
                 <div className="flex gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => { setSelectedEventId(event.id); loadPhotos(event.id); }}>
+                  <Button variant="ghost" size="sm" onClick={() => { setSelectedEventId(event.id); loadPhotos(event.id); }} aria-label="Ver fotos">
                     <Eye className="w-4 h-4" />
                   </Button>
                   {canUpload && (
                     <label className="inline-flex items-center">
                       <input type="file" className="hidden" multiple onChange={(e) => handleUpload(event.id, e.target.files)} />
-                      <Button variant="ghost" size="sm" asChild>
+                      <Button variant="ghost" size="sm" asChild aria-label="Subir fotos">
                         <span><Upload className="w-4 h-4" /></span>
                       </Button>
                     </label>
                   )}
                 </div>
-                <Button variant="ghost" size="sm" disabled={!canDownload} onClick={() => toast({ description: canDownload ? 'Selecciona una foto para descargar' : 'Inicia sesión para descargar' })}>
-                  <Download className="w-4 h-4" />
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="sm" disabled={!canDownload} onClick={() => handleDownloadAll(event.id)} aria-label="Descargar todo">
+                    <Download className="w-4 h-4" />
+                  </Button>
+                  {isAdmin && (
+                    <Button variant="ghost" size="sm" onClick={() => handleDeleteEvent(event.id)} aria-label="Eliminar evento">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
             </Card>
           ))}
@@ -385,12 +455,11 @@ const GallerySection = () => {
                       <Button variant="ghost" size="icon" onClick={() => handleDownload(p)} disabled={!canDownload} aria-label="Descargar">
                         <Download className="w-4 h-4" />
                       </Button>
-                      {/* Placeholder for future edit caption */}
-                      <Button variant="ghost" size="icon" disabled aria-label="Editar">
+                      <Button variant="ghost" size="icon" onClick={() => handleEditCaption(p)} disabled={!(isAdmin || p.uploaded_by === userId)} aria-label="Editar">
                         <Pencil className="w-4 h-4" />
                       </Button>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeletePhoto(p)} disabled={uploading} aria-label="Eliminar">
+                    <Button variant="ghost" size="icon" onClick={() => handleDeletePhoto(p)} disabled={uploading || !(isAdmin || p.uploaded_by === userId)} aria-label="Eliminar">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
