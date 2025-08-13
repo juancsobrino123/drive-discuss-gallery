@@ -80,14 +80,15 @@ const useRoles = () => {
 const GallerySection = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
-const [events, setEvents] = useState<EventItem[]>([]);
-const [photosByEvent, setPhotosByEvent] = useState<Record<string, PhotoItem[]>>({});
-const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
-const [previewByEvent, setPreviewByEvent] = useState<Record<string, PhotoItem[]>>({});
-const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({});
-const [creating, setCreating] = useState(false);
-const [uploading, setUploading] = useState(false);
-const [newEvent, setNewEvent] = useState({ title: "", date: "", location: "", description: "" });
+  const [events, setEvents] = useState<EventItem[]>([]);
+  const [photosByEvent, setPhotosByEvent] = useState<Record<string, PhotoItem[]>>({});
+  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
+  const [previewByEvent, setPreviewByEvent] = useState<Record<string, PhotoItem[]>>({});
+  const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({});
+  const [creating, setCreating] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [newEvent, setNewEvent] = useState({ title: "", date: "", location: "", description: "" });
+  const [loadingEvents, setLoadingEvents] = useState(true);
 
   const { canCreateEvent, canUpload, isAdmin, canDownload, userId } = useRoles();
 
@@ -95,20 +96,30 @@ const [newEvent, setNewEvent] = useState({ title: "", date: "", location: "", de
   useEffect(() => {
     const loadEvents = async () => {
       console.log('Loading events...');
+      setLoadingEvents(true);
       try {
         const { data, error } = await supabase
           .from("events")
           .select("id, title, description, event_date, location, created_by")
           .order("created_at", { ascending: false });
+        
+        console.log('Query result:', { data, error });
+        
         if (error) {
           console.error('Error loading events:', error);
-          toast({ description: "Error cargando eventos" });
+          toast({ description: "Error cargando eventos: " + error.message });
           return;
         }
+        
         console.log('Events loaded successfully:', data);
+        console.log('Number of events:', data?.length || 0);
+        
         setEvents(data as EventItem[]);
       } catch (err) {
         console.error('Unexpected error:', err);
+        toast({ description: "Error inesperado cargando eventos" });
+      } finally {
+        setLoadingEvents(false);
       }
     };
     loadEvents();
@@ -173,7 +184,11 @@ const [newEvent, setNewEvent] = useState({ title: "", date: "", location: "", de
 
   // Load previews when events change
   useEffect(() => {
-    events.forEach((e) => loadPreview(e.id));
+    console.log('Events changed, loading previews for:', events.length, 'events');
+    events.forEach((e) => {
+      console.log('Loading preview for event:', e.id, e.title);
+      loadPreview(e.id);
+    });
   }, [events]);
 
   const handleCreateEvent = async () => {
@@ -199,7 +214,7 @@ const [newEvent, setNewEvent] = useState({ title: "", date: "", location: "", de
       const { data } = await supabase
         .from("events")
         .select("id, title, description, event_date, location, created_by")
-        .order("event_date", { ascending: false });
+        .order("created_at", { ascending: false });
       setEvents((data || []) as EventItem[]);
     } catch (e: any) {
       console.error(e);
@@ -264,7 +279,7 @@ const [newEvent, setNewEvent] = useState({ title: "", date: "", location: "", de
     }
   };
 
-const handleDownload = async (photo: PhotoItem) => {
+  const handleDownload = async (photo: PhotoItem) => {
     try {
       if (!canDownload) {
         toast({ description: "Inicia sesión para descargar" });
@@ -304,7 +319,7 @@ const handleDownload = async (photo: PhotoItem) => {
       const { data } = await supabase
         .from('events')
         .select('id, title, description, event_date, location, created_by')
-        .order('event_date', { ascending: false });
+        .order('created_at', { ascending: false });
       setEvents((data || []) as EventItem[]);
     } catch (e: any) {
       console.error(e);
@@ -341,6 +356,21 @@ const handleDownload = async (photo: PhotoItem) => {
   };
 
   const featuredTitle = useMemo(() => events[0]?.title || "Tokyo Auto Salon 2024", [events]);
+
+  if (loadingEvents) {
+    return (
+      <section id="gallery" className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+              {t('gallery.heading')}
+            </h2>
+            <p className="text-muted-foreground">Cargando galerías...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="gallery" className="py-20">
@@ -392,133 +422,141 @@ const handleDownload = async (photo: PhotoItem) => {
           )}
         </div>
 
-        {/* Featured Gallery Preview */}
-        {events.length > 0 && (
-          <div className="mb-12">
-            <Card className="overflow-hidden bg-gradient-card shadow-elegant">
-              <div className="relative">
-                <img 
-                  src={previewUrls[previewByEvent[events[0].id]?.[0]?.id] || galleryPreview} 
-                  alt={`Vista previa galería ${events[0].title}`}
-                  className="w-full h-64 md:h-96 object-cover"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                <div className="absolute bottom-6 left-6 right-6">
-                  <div className="flex items-center text-white/90 text-sm mb-2">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Galería del evento más reciente
+        {events.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground mb-4">No hay galerías disponibles</p>
+            {canCreateEvent && (
+              <p className="text-sm text-muted-foreground">Crea tu primera galería usando el botón "Crear evento"</p>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* Featured Gallery Preview */}
+            <div className="mb-12">
+              <Card className="overflow-hidden bg-gradient-card shadow-elegant">
+                <div className="relative">
+                  <img 
+                    src={previewUrls[previewByEvent[events[0].id]?.[0]?.id] || galleryPreview} 
+                    alt={`Vista previa galería ${events[0].title}`}
+                    className="w-full h-64 md:h-96 object-cover"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                  <div className="absolute bottom-6 left-6 right-6">
+                    <div className="flex items-center text-white/90 text-sm mb-2">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Galería del evento más reciente
+                    </div>
+                    <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">
+                      {events[0].title}
+                    </h3>
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <Link to={`/galeria/${events[0].id}`}>
+                        <Button variant="hero" size="lg">
+                          <Eye className="w-5 h-5 mr-2" />
+                          Ver galería
+                        </Button>
+                      </Link>
+                      <Button 
+                        variant="platform" 
+                        size="lg" 
+                        disabled={!canDownload} 
+                        onClick={() => canDownload ? handleDownloadAll(events[0].id) : toast({ description: 'Inicia sesión para descargar' })}
+                      >
+                        <Download className="w-5 h-5 mr-2" />
+                        Descargar todo ({previewByEvent[events[0].id]?.length || 0} fotos)
+                      </Button>
+                    </div>
                   </div>
-                  <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">
-                    {events[0].title}
+                </div>
+              </Card>
+            </div>
+
+            {/* Event Galleries Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+              {events.map((event) => (
+                <Card 
+                  key={event.id}
+                  className={`p-6 hover:shadow-royal transition-all duration-300 transform hover:-translate-y-2 bg-gradient-card`}
+                >
+                  <div className="mb-3">
+                    <div className="grid grid-cols-2 gap-1 h-40">
+                      {(previewByEvent[event.id] || []).slice(0, 4).map((p) => (
+                        <img
+                          key={p.id}
+                          src={previewUrls[p.id] || galleryPreview}
+                          alt={p.caption || 'Miniatura de evento'}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      ))}
+                      {Array.from({ length: Math.max(0, 4 - (previewByEvent[event.id]?.length || 0)) }).map((_, idx) => (
+                        <img
+                          key={`placeholder-${idx}`}
+                          src={galleryPreview}
+                          alt="Miniatura de evento"
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold text-foreground mb-3 line-clamp-2">
+                    {event.title}
                   </h3>
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <Link to={`/galeria/${events[0].id}`}>
-                      <Button variant="hero" size="lg">
-                        <Eye className="w-5 h-5 mr-2" />
+                  <div className="space-y-2 mb-4 text-sm text-muted-foreground">
+                    <div className="flex items-center">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      {event.event_date || '-'}
+                    </div>
+                    <div className="flex items-center">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      {event.location || '-'}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3 mt-4">
+                    <Link to={`/galeria/${event.id}`} className="w-full">
+                      <Button 
+                        variant="platform" 
+                        className="w-full"
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
                         Ver galería
                       </Button>
                     </Link>
-                    <Button 
-                      variant="platform" 
-                      size="lg" 
-                      disabled={!canDownload} 
-                      onClick={() => canDownload ? handleDownloadAll(events[0].id) : toast({ description: 'Inicia sesión para descargar' })}
-                    >
-                      <Download className="w-5 h-5 mr-2" />
-                      Descargar todo ({previewByEvent[events[0].id]?.length || 0} fotos)
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </div>
-        )}
-
-        {/* Event Galleries Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {events.map((event) => (
-            <Card 
-              key={event.id}
-              className={`p-6 hover:shadow-royal transition-all duration-300 transform hover:-translate-y-2 bg-gradient-card`}
-            >
-<div className="mb-3">
-                <div className="grid grid-cols-2 gap-1 h-40">
-                  {(previewByEvent[event.id] || []).slice(0, 4).map((p) => (
-                    <img
-                      key={p.id}
-                      src={previewUrls[p.id] || galleryPreview}
-                      alt={p.caption || 'Miniatura de evento'}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  ))}
-                  {Array.from({ length: Math.max(0, 4 - (previewByEvent[event.id]?.length || 0)) }).map((_, idx) => (
-                    <img
-                      key={`placeholder-${idx}`}
-                      src={galleryPreview}
-                      alt="Miniatura de evento"
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  ))}
-                </div>
-              </div>
-              <h3 className="text-lg font-bold text-foreground mb-3 line-clamp-2">
-                {event.title}
-              </h3>
-              <div className="space-y-2 mb-4 text-sm text-muted-foreground">
-                <div className="flex items-center">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  {event.event_date || '-'}
-                </div>
-                <div className="flex items-center">
-                  <MapPin className="w-4 h-4 mr-2" />
-                  {event.location || '-'}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-3 mt-4">
-                <Link to={`/galeria/${event.id}`} className="w-full">
-                  <Button 
-                    variant="platform" 
-                    className="w-full"
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    Ver galería
-                  </Button>
-                </Link>
-                <div className="flex items-center justify-between">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    disabled={!canDownload}
-                    onClick={() => canDownload ? handleDownloadAll(event.id) : toast({ description: 'Inicia sesión para descargar' })}
-                  >
-                    <Download className="w-4 h-4 mr-1" />
-                    Descargar todo ({(previewByEvent[event.id] || []).length} fotos)
-                  </Button>
-                  <div className="flex gap-1">
-                    {canUpload && (
-                      <label className="inline-flex items-center">
-                        <input type="file" className="hidden" multiple onChange={(e) => handleUpload(event.id, e.target.files)} />
-                        <Button variant="ghost" size="sm" asChild aria-label="Subir fotos">
-                          <span><Upload className="w-4 h-4" /></span>
-                        </Button>
-                      </label>
-                    )}
-                    {isAdmin && (
-                      <Button variant="ghost" size="sm" onClick={() => handleDeleteEvent(event.id)} aria-label="Eliminar evento">
-                        <Trash2 className="w-4 h-4" />
+                    <div className="flex items-center justify-between">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        disabled={!canDownload}
+                        onClick={() => canDownload ? handleDownloadAll(event.id) : toast({ description: 'Inicia sesión para descargar' })}
+                      >
+                        <Download className="w-4 h-4 mr-1" />
+                        Descargar todo ({(previewByEvent[event.id] || []).length} fotos)
                       </Button>
-                    )}
+                      <div className="flex gap-1">
+                        {canUpload && (
+                          <label className="inline-flex items-center">
+                            <input type="file" className="hidden" multiple onChange={(e) => handleUpload(event.id, e.target.files)} />
+                            <Button variant="ghost" size="sm" asChild aria-label="Subir fotos">
+                              <span><Upload className="w-4 h-4" /></span>
+                            </Button>
+                          </label>
+                        )}
+                        {isAdmin && (
+                          <Button variant="ghost" size="sm" onClick={() => handleDeleteEvent(event.id)} aria-label="Eliminar evento">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-
+                </Card>
+              ))}
+            </div>
+          </>
+        )}
 
         {/* Gallery Features */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center mt-12">
