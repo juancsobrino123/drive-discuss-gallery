@@ -10,8 +10,8 @@ import { Download, Eye, Calendar, MapPin, Plus, Upload, Trash2, Pencil } from "l
 import galleryPreview from "@/assets/gallery-preview.jpg";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/use-auth";
 
-// Minimal local types (Supabase types file doesn't include these yet)
 interface EventItem {
   id: string;
   title: string;
@@ -30,9 +30,6 @@ interface PhotoItem {
   uploaded_by: string;
   is_thumbnail?: boolean;
 }
-
-// Use the global auth context instead of local state
-import { useAuth } from "@/hooks/use-auth";
 
 const GallerySection = () => {
   const { t } = useTranslation();
@@ -93,59 +90,70 @@ const GallerySection = () => {
 
   // Load photos for selected event
   const loadPhotos = async (eventId: string) => {
-    const { data, error } = await supabase
-      .from("photos")
-      .select("id, event_id, storage_path, thumbnail_path, caption, uploaded_by")
-      .eq("event_id", eventId)
-      .order("created_at", { ascending: false });
-    if (error) {
-      console.error(error);
-      toast({ description: "Error cargando fotos" });
-      return;
-    }
+    try {
+      const { data, error } = await supabase
+        .from("photos")
+        .select("id, event_id, storage_path, thumbnail_path, caption, uploaded_by")
+        .eq("event_id", eventId)
+        .order("created_at", { ascending: false });
 
-    const items = (data || []) as PhotoItem[];
-    setPhotosByEvent((prev) => ({ ...prev, [eventId]: items }));
-
-    // Build URLs (thumbs are public; originals are signed when downloading)
-    const newUrls: Record<string, string> = {};
-    for (const p of items) {
-      if (p.thumbnail_path) {
-        const { data: pub } = supabase.storage.from("gallery-thumbs").getPublicUrl(p.thumbnail_path);
-        if (pub?.publicUrl) newUrls[p.id] = pub.publicUrl;
-      } else {
-        // Fallback to placeholder
-        newUrls[p.id] = galleryPreview;
+      if (error) {
+        console.error('Error loading photos:', error);
+        toast({ description: "Error cargando fotos" });
+        return;
       }
+
+      const items = (data || []) as PhotoItem[];
+      setPhotosByEvent((prev) => ({ ...prev, [eventId]: items }));
+
+      // Build URLs (thumbs are public; originals are signed when downloading)
+      const newUrls: Record<string, string> = {};
+      for (const p of items) {
+        if (p.thumbnail_path) {
+          const { data: pub } = supabase.storage.from("gallery-thumbs").getPublicUrl(p.thumbnail_path);
+          if (pub?.publicUrl) newUrls[p.id] = pub.publicUrl;
+        } else {
+          newUrls[p.id] = galleryPreview;
+        }
+      }
+      setPhotoUrls((prev) => ({ ...prev, ...newUrls }));
+    } catch (err) {
+      console.error('Unexpected error loading photos:', err);
+      toast({ description: "Error inesperado cargando fotos" });
     }
-    setPhotoUrls((prev) => ({ ...prev, ...newUrls }));
   };
 
   // Load preview thumbnails (prioritize is_thumbnail, fallback to first photos)
   const loadPreview = async (eventId: string) => {
-    const { data, error } = await supabase
-      .from('photos')
-      .select('id, event_id, storage_path, thumbnail_path, caption, uploaded_by, is_thumbnail')
-      .eq('event_id', eventId)
-      .order('is_thumbnail', { ascending: false })
-      .order('created_at', { ascending: true })
-      .limit(4);
-    if (error) {
-      console.error(error);
-      return;
-    }
-    const items = (data || []) as PhotoItem[];
-    setPreviewByEvent((prev) => ({ ...prev, [eventId]: items }));
-    const newUrls: Record<string, string> = {};
-    for (const p of items) {
-      if (p.thumbnail_path) {
-        const { data: pub } = supabase.storage.from('gallery-thumbs').getPublicUrl(p.thumbnail_path);
-        if (pub?.publicUrl) newUrls[p.id] = pub.publicUrl;
-      } else {
-        newUrls[p.id] = galleryPreview;
+    try {
+      const { data, error } = await supabase
+        .from('photos')
+        .select('id, event_id, storage_path, thumbnail_path, caption, uploaded_by, is_thumbnail')
+        .eq('event_id', eventId)
+        .order('is_thumbnail', { ascending: false })
+        .order('created_at', { ascending: true })
+        .limit(4);
+
+      if (error) {
+        console.error('Error loading preview:', error);
+        return;
       }
+
+      const items = (data || []) as PhotoItem[];
+      setPreviewByEvent((prev) => ({ ...prev, [eventId]: items }));
+      const newUrls: Record<string, string> = {};
+      for (const p of items) {
+        if (p.thumbnail_path) {
+          const { data: pub } = supabase.storage.from('gallery-thumbs').getPublicUrl(p.thumbnail_path);
+          if (pub?.publicUrl) newUrls[p.id] = pub.publicUrl;
+        } else {
+          newUrls[p.id] = galleryPreview;
+        }
+      }
+      setPreviewUrls((prev) => ({ ...prev, ...newUrls }));
+    } catch (err) {
+      console.error('Unexpected error loading preview:', err);
     }
-    setPreviewUrls((prev) => ({ ...prev, ...newUrls }));
   };
 
   // Load previews when events change
@@ -153,8 +161,12 @@ const GallerySection = () => {
     if (events.length === 0) return;
     
     const loadPreviews = async () => {
-      const promises = events.map(event => loadPreview(event.id));
-      await Promise.all(promises);
+      try {
+        const promises = events.map(event => loadPreview(event.id));
+        await Promise.all(promises);
+      } catch (err) {
+        console.error('Error loading previews:', err);
+      }
     };
     
     loadPreviews();
@@ -178,6 +190,7 @@ const GallerySection = () => {
       if (error) throw error;
       toast({ description: "Evento creado" });
       setNewEvent({ title: "", date: "", location: "", description: "" });
+      
       // Reload events
       const { data } = await supabase
         .from("events")
@@ -185,7 +198,7 @@ const GallerySection = () => {
         .order("created_at", { ascending: false });
       setEvents((data || []) as EventItem[]);
     } catch (e: any) {
-      console.error(e);
+      console.error('Error creating event:', e);
       toast({ description: e.message || "No se pudo crear el evento" });
     } finally {
       setCreating(false);
@@ -205,11 +218,12 @@ const GallerySection = () => {
         const basePath = `${user.id}/${eventId}/${Date.now()}_${file.name}`;
         const { error: upErr } = await supabase.storage.from("gallery").upload(basePath, file, { upsert: false });
         if (upErr) throw upErr;
-        // Optional: also upload as thumbnail for now (same file). In real flow you'd resize client-side.
+        
         const { error: thErr } = await supabase.storage.from("gallery-thumbs").upload(basePath, file, { upsert: false });
         if (thErr) {
           console.warn("Thumb upload failed", thErr);
         }
+        
         const { error: insErr } = await supabase.from("photos").insert({
           event_id: eventId,
           storage_path: basePath,
@@ -222,75 +236,10 @@ const GallerySection = () => {
       toast({ description: "Fotos subidas" });
       await loadPhotos(eventId);
     } catch (e: any) {
-      console.error(e);
+      console.error('Error uploading photos:', e);
       toast({ description: e.message || "Error al subir fotos" });
     } finally {
       setUploading(false);
-    }
-  };
-
-  const handleDeletePhoto = async (photo: PhotoItem) => {
-    try {
-      const { error } = await supabase.from("photos").delete().eq("id", photo.id);
-      if (error) throw error;
-      // Try deleting storage objects (policy allows owner or admin)
-      await supabase.storage.from("gallery").remove([photo.storage_path]);
-      if (photo.thumbnail_path) {
-        await supabase.storage.from("gallery-thumbs").remove([photo.thumbnail_path]);
-      }
-      toast({ description: "Foto eliminada" });
-      if (photo.event_id) await loadPhotos(photo.event_id);
-    } catch (e: any) {
-      console.error(e);
-      toast({ description: e.message || "No se pudo eliminar" });
-    }
-  };
-
-  const handleDownload = async (photo: PhotoItem) => {
-    try {
-      if (!canDownload) {
-        toast({ description: "Inicia sesión para descargar" });
-        return;
-      }
-      const { data, error } = await supabase.storage
-        .from("gallery")
-        .createSignedUrl(photo.storage_path, 60);
-      if (error || !data?.signedUrl) throw error || new Error("No URL");
-      window.open(data.signedUrl, "_blank");
-    } catch (e: any) {
-      console.error(e);
-      toast({ description: e.message || "No se pudo descargar" });
-    }
-  };
-
-  const handleEditCaption = async (photo: PhotoItem) => {
-    const value = window.prompt('Editar descripción', photo.caption || '')?.trim();
-    if (value === undefined) return; // cancel
-    try {
-      const { error } = await supabase.from('photos').update({ caption: value || null }).eq('id', photo.id);
-      if (error) throw error;
-      toast({ description: 'Descripción actualizada' });
-      await loadPhotos(photo.event_id);
-    } catch (e: any) {
-      console.error(e);
-      toast({ description: e.message || 'No se pudo actualizar' });
-    }
-  };
-
-  const handleDeleteEvent = async (eventId: string) => {
-    if (!isAdmin) return;
-    if (!window.confirm('¿Eliminar evento y todas sus fotos?')) return;
-    try {
-      const { error } = await supabase.from('events').delete().eq('id', eventId);
-      if (error) throw error;
-      const { data } = await supabase
-        .from('events')
-        .select('id, title, description, event_date, location, created_by')
-        .order('created_at', { ascending: false });
-      setEvents((data || []) as EventItem[]);
-    } catch (e: any) {
-      console.error(e);
-      toast({ description: e.message || 'No se pudo eliminar el evento' });
     }
   };
 
@@ -317,12 +266,10 @@ const GallerySection = () => {
         }
       }
     } catch (e: any) {
-      console.error(e);
+      console.error('Error downloading all:', e);
       toast({ description: e.message || 'No se pudo descargar todo' });
     }
   };
-
-  const featuredTitle = useMemo(() => events[0]?.title || "Tokyo Auto Salon 2024", [events]);
 
   // Show loading state while auth is loading
   if (authLoading) {
@@ -466,104 +413,60 @@ const GallerySection = () => {
                           loading="lazy"
                         />
                       ))}
-                      {Array.from({ length: Math.max(0, 4 - (previewByEvent[event.id]?.length || 0)) }).map((_, idx) => (
-                        <img
-                          key={`placeholder-${idx}`}
-                          src={galleryPreview}
-                          alt="Miniatura de evento"
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
-                      ))}
+                      {(previewByEvent[event.id] || []).length < 4 && 
+                        Array.from({ length: 4 - (previewByEvent[event.id] || []).length }).map((_, idx) => (
+                          <div key={`empty-${idx}`} className="w-full h-full bg-muted/20 flex items-center justify-center">
+                            <span className="text-muted-foreground/50 text-xs">Sin fotos</span>
+                          </div>
+                        ))
+                      }
                     </div>
                   </div>
-                  <h3 className="text-lg font-bold text-foreground mb-3 line-clamp-2">
+                  
+                  <h3 className="font-semibold text-foreground mb-2 truncate">
                     {event.title}
                   </h3>
-                  <div className="space-y-2 mb-4 text-sm text-muted-foreground">
-                    <div className="flex items-center">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      {event.event_date || '-'}
+                  
+                  <div className="text-sm text-muted-foreground mb-3">
+                    <div className="flex items-center mb-1">
+                      <Calendar className="w-4 h-4 mr-1" />
+                      <span>{event.event_date || 'Fecha por definir'}</span>
                     </div>
                     <div className="flex items-center">
-                      <MapPin className="w-4 h-4 mr-2" />
-                      {event.location || '-'}
+                      <MapPin className="w-4 h-4 mr-1" />
+                      <span className="truncate">{event.location || 'Ubicación por definir'}</span>
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-3 mt-4">
-                    <Link to={`/galeria/${event.id}`} className="w-full">
-                      <Button 
-                        variant="platform" 
-                        className="w-full"
-                      >
+                  <div className="flex gap-2">
+                    <Link to={`/galeria/${event.id}`} className="flex-1">
+                      <Button variant="outline" size="sm" className="w-full">
                         <Eye className="w-4 h-4 mr-2" />
-                        Ver galería
+                        Ver
                       </Button>
                     </Link>
-                    <div className="flex items-center justify-between">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        disabled={!canDownload}
-                        onClick={() => canDownload ? handleDownloadAll(event.id) : toast({ description: 'Inicia sesión para descargar' })}
-                      >
-                        <Download className="w-4 h-4 mr-1" />
-                        Descargar todo ({(previewByEvent[event.id] || []).length} fotos)
-                      </Button>
-                      <div className="flex gap-1">
-                        {canUpload && (
-                          <label className="inline-flex items-center">
-                            <input type="file" className="hidden" multiple onChange={(e) => handleUpload(event.id, e.target.files)} />
-                            <Button variant="ghost" size="sm" asChild aria-label="Subir fotos">
-                              <span><Upload className="w-4 h-4" /></span>
-                            </Button>
-                          </label>
-                        )}
-                        {isAdmin && (
-                          <Button variant="ghost" size="sm" onClick={() => handleDeleteEvent(event.id)} aria-label="Eliminar evento">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
+                    {canUpload && (
+                      <label className="flex-1">
+                        <input 
+                          type="file" 
+                          className="hidden" 
+                          multiple 
+                          onChange={(e) => handleUpload(event.id, e.target.files)} 
+                        />
+                        <Button variant="secondary" size="sm" asChild className="w-full">
+                          <span>
+                            <Upload className="w-4 h-4 mr-2" />
+                            Subir
+                          </span>
+                        </Button>
+                      </label>
+                    )}
                   </div>
                 </Card>
               ))}
             </div>
           </>
         )}
-
-        {/* Gallery Features */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center mt-12">
-          <div className="space-y-4">
-            <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center mx-auto">
-              <Download className="w-8 h-8 text-primary" />
-            </div>
-            <h3 className="text-xl font-bold text-foreground">{t('gallery.features.freeTitle')}</h3>
-            <p className="text-muted-foreground">
-              {t('gallery.features.freeDesc')}
-            </p>
-          </div>
-          <div className="space-y-4">
-            <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center mx-auto">
-              <Eye className="w-8 h-8 text-primary" />
-            </div>
-            <h3 className="text-xl font-bold text-foreground">{t('gallery.features.qualityTitle')}</h3>
-            <p className="text-muted-foreground">
-              {t('gallery.features.qualityDesc')}
-            </p>
-          </div>
-          <div className="space-y-4">
-            <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center mx-auto">
-              <Calendar className="w-8 h-8 text-primary" />
-            </div>
-            <h3 className="text-xl font-bold text-foreground">{t('gallery.features.updatesTitle')}</h3>
-            <p className="text-muted-foreground">
-              {t('gallery.features.updatesDesc')}
-            </p>
-          </div>
-        </div>
       </div>
     </section>
   );

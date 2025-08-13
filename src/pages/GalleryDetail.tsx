@@ -4,13 +4,12 @@ import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/ui/footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Download, Eye, Calendar, MapPin, Upload, Trash2, Pencil, Star } from "lucide-react";
+import { Download, Calendar, MapPin, Upload, Trash2, Pencil, Star } from "lucide-react";
 import galleryPreview from "@/assets/gallery-preview.jpg";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/hooks/use-auth";
 
 interface EventItem {
   id: string;
@@ -31,43 +30,11 @@ interface PhotoItem {
   is_thumbnail: boolean;
 }
 
-const useRoles = () => {
-  const [roles, setRoles] = useState<string[]>([]);
-  const [userId, setUserId] = useState<string | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const uid = sessionData.session?.user?.id ?? null;
-      if (mounted) setUserId(uid);
-      if (!uid) {
-        if (mounted) setRoles([]);
-        return;
-      }
-      const { data } = await supabase.from("user_roles").select("role").eq("user_id", uid);
-      if (mounted) setRoles(data?.map((r: any) => r.role) ?? []);
-    };
-    load();
-    const { data: sub } = supabase.auth.onAuthStateChange(() => load());
-    return () => {
-      mounted = false;
-      sub.subscription.unsubscribe();
-    };
-  }, []);
-
-  const canUpload = roles.includes("copiloto") || roles.includes("admin");
-  const isAdmin = roles.includes("admin");
-  const canDownload = roles.length > 0;
-
-  return { userId, canUpload, isAdmin, canDownload };
-};
-
 const GalleryDetail = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { eventId } = useParams();
-  const { userId, canUpload, isAdmin, canDownload } = useRoles();
+  const { user, canUpload, isAdmin, canDownload } = useAuth();
 
   const [event, setEvent] = useState<EventItem | null>(null);
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
@@ -113,38 +80,57 @@ const GalleryDetail = () => {
 
   const loadEvent = async () => {
     if (!eventId) return;
-    const { data, error } = await supabase
-      .from('events')
-      .select('id, title, description, event_date, location, created_by')
-      .eq('id', eventId)
-      .maybeSingle();
-    if (!error) setEvent(data as EventItem);
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('id, title, description, event_date, location, created_by')
+        .eq('id', eventId)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Error loading event:', error);
+        toast({ description: 'Error cargando evento' });
+        return;
+      }
+      
+      setEvent(data as EventItem);
+    } catch (err) {
+      console.error('Unexpected error loading event:', err);
+      toast({ description: 'Error inesperado cargando evento' });
+    }
   };
 
   const loadPhotos = async () => {
     if (!eventId) return;
-    const { data, error } = await supabase
-      .from('photos')
-      .select('id, event_id, storage_path, thumbnail_path, caption, uploaded_by, is_thumbnail')
-      .eq('event_id', eventId)
-      .order('created_at', { ascending: false });
-    if (error) {
-      console.error(error);
-      toast({ description: 'Error cargando fotos' });
-      return;
-    }
-    const items = (data || []) as PhotoItem[];
-    setPhotos(items);
-    const urls: Record<string, string> = {};
-    for (const p of items) {
-      if (p.thumbnail_path) {
-        const { data: pub } = supabase.storage.from('gallery-thumbs').getPublicUrl(p.thumbnail_path);
-        if (pub?.publicUrl) urls[p.id] = pub.publicUrl;
-      } else {
-        urls[p.id] = galleryPreview;
+    try {
+      const { data, error } = await supabase
+        .from('photos')
+        .select('id, event_id, storage_path, thumbnail_path, caption, uploaded_by, is_thumbnail')
+        .eq('event_id', eventId)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error loading photos:', error);
+        toast({ description: 'Error cargando fotos' });
+        return;
       }
+      
+      const items = (data || []) as PhotoItem[];
+      setPhotos(items);
+      const urls: Record<string, string> = {};
+      for (const p of items) {
+        if (p.thumbnail_path) {
+          const { data: pub } = supabase.storage.from('gallery-thumbs').getPublicUrl(p.thumbnail_path);
+          if (pub?.publicUrl) urls[p.id] = pub.publicUrl;
+        } else {
+          urls[p.id] = galleryPreview;
+        }
+      }
+      setThumbUrls(urls);
+    } catch (err) {
+      console.error('Unexpected error loading photos:', err);
+      toast({ description: 'Error inesperado cargando fotos' });
     }
-    setThumbUrls(urls);
   };
 
   useEffect(() => {
@@ -156,14 +142,12 @@ const GalleryDetail = () => {
     if (!files || files.length === 0 || !eventId) return;
     try {
       setCreating(true);
-      const { data: session } = await supabase.auth.getSession();
-      const uid = session.session?.user?.id;
-      if (!uid) {
+      if (!user) {
         toast({ description: 'Inicia sesión para subir fotos' });
         return;
       }
       for (const file of Array.from(files)) {
-        const basePath = `${uid}/${eventId}/${Date.now()}_${file.name}`;
+        const basePath = `${user.id}/${eventId}/${Date.now()}_${file.name}`;
         const { error: upErr } = await supabase.storage.from('gallery').upload(basePath, file, { upsert: false });
         if (upErr) throw upErr;
         const { error: thErr } = await supabase.storage.from('gallery-thumbs').upload(basePath, file, { upsert: false });
@@ -173,14 +157,14 @@ const GalleryDetail = () => {
           storage_path: basePath,
           thumbnail_path: basePath,
           caption: null,
-          uploaded_by: uid,
+          uploaded_by: user.id,
         });
         if (insErr) throw insErr;
       }
       toast({ description: 'Fotos subidas' });
       await loadPhotos();
     } catch (e: any) {
-      console.error(e);
+      console.error('Error uploading:', e);
       toast({ description: e.message || 'Error al subir fotos' });
     } finally {
       setCreating(false);
@@ -197,7 +181,7 @@ const GalleryDetail = () => {
       if (error || !data?.signedUrl) throw error || new Error('No URL');
       window.open(data.signedUrl, '_blank');
     } catch (e: any) {
-      console.error(e);
+      console.error('Error downloading:', e);
       toast({ description: e.message || 'No se pudo descargar' });
     }
   };
@@ -216,7 +200,7 @@ const GalleryDetail = () => {
         }
       }
     } catch (e: any) {
-      console.error(e);
+      console.error('Error downloading all:', e);
       toast({ description: e.message || 'No se pudo descargar todo' });
     }
   };
@@ -230,7 +214,7 @@ const GalleryDetail = () => {
       toast({ description: 'Descripción actualizada' });
       await loadPhotos();
     } catch (e: any) {
-      console.error(e);
+      console.error('Error updating caption:', e);
       toast({ description: e.message || 'No se pudo actualizar' });
     }
   };
@@ -244,7 +228,7 @@ const GalleryDetail = () => {
       toast({ description: 'Foto eliminada' });
       await loadPhotos();
     } catch (e: any) {
-      console.error(e);
+      console.error('Error deleting photo:', e);
       toast({ description: e.message || 'No se pudo eliminar' });
     }
   };
@@ -262,7 +246,7 @@ const GalleryDetail = () => {
       if (error) throw error;
       await loadPhotos();
     } catch (e: any) {
-      console.error(e);
+      console.error('Error toggling thumbnail:', e);
       toast({ description: e.message || 'No se pudo actualizar miniatura' });
     }
   };
@@ -323,7 +307,7 @@ const GalleryDetail = () => {
                       <Button variant="ghost" size="icon" onClick={() => handleDownload(p)} disabled={!canDownload} aria-label="Descargar">
                         <Download className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleEditCaption(p)} disabled={!(isAdmin || p.uploaded_by === userId)} aria-label="Editar">
+                      <Button variant="ghost" size="icon" onClick={() => handleEditCaption(p)} disabled={!(isAdmin || p.uploaded_by === user?.id)} aria-label="Editar">
                         <Pencil className="w-4 h-4" />
                       </Button>
                     </div>
@@ -331,7 +315,7 @@ const GalleryDetail = () => {
                       <Button variant={p.is_thumbnail ? 'default' : 'ghost'} size="icon" onClick={() => toggleThumbnail(p)} aria-label="Marcar como miniatura">
                         <Star className={p.is_thumbnail ? 'text-primary' : ''} />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDeletePhoto(p)} disabled={!(isAdmin || p.uploaded_by === userId)} aria-label="Eliminar">
+                      <Button variant="ghost" size="icon" onClick={() => handleDeletePhoto(p)} disabled={!(isAdmin || p.uploaded_by === user?.id)} aria-label="Eliminar">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>

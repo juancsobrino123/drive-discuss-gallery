@@ -1,6 +1,8 @@
 import { useEffect } from "react";
-import GallerySection from "@/components/ui/gallery-section";
 import { useTranslation } from "react-i18next";
+import Navbar from "@/components/ui/navbar";
+import Footer from "@/components/ui/footer";
+import GallerySection from "@/components/ui/gallery-section";
 
 const Gallery = () => {
   const { t } = useTranslation();
@@ -24,7 +26,6 @@ const Gallery = () => {
 
     setMeta('description', description);
 
-    // Canonical tag
     let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
     if (!link) {
       link = document.createElement('link');
@@ -43,7 +44,8 @@ const Gallery = () => {
   };
 
   return (
-    <>
+    <div className="min-h-screen bg-background">
+      <Navbar />
       <main>
         <header className="pt-28 pb-8 border-b border-border bg-gradient-to-b from-background/50 to-background">
           <div className="container mx-auto px-4 text-center">
@@ -59,7 +61,6 @@ const Gallery = () => {
         {/* Structured data for SEO */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-        {/* Reuse existing gallery section for consistent style */}
         <section aria-labelledby="gallery-all" className="py-8">
           <div className="container mx-auto px-4">
             <h2 id="gallery-all" className="sr-only">Todas las galerías</h2>
@@ -67,7 +68,8 @@ const Gallery = () => {
           </div>
         </section>
       </main>
-    </>
+      <Footer />
+    </div>
   );
 };
 
