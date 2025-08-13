@@ -53,14 +53,25 @@ const Profile = () => {
     setLoading(true);
     
     try {
-      const { error } = await supabase
+      console.log('Saving profile for user:', user.id, 'with username:', username.trim());
+      
+      // Primero intentar actualizar, si no existe, crear
+      const { data, error } = await supabase
         .from("profiles")
-        .update({ username: username.trim() })
-        .eq("id", user.id);
+        .upsert({ 
+          id: user.id,
+          username: username.trim(),
+          avatar_url: avatarUrl || null
+        }, {
+          onConflict: 'id'
+        })
+        .select();
+        
+      console.log('Upsert result:', { data, error });
         
       if (error) {
-        console.error('Profile update error:', error);
-        toast.error("Failed to update profile");
+        console.error('Profile upsert error:', error);
+        toast.error("Error al actualizar perfil: " + error.message);
         return;
       }
 
@@ -69,10 +80,10 @@ const Profile = () => {
         data: { display_name: username.trim() }
       });
 
-      toast.success("Profile updated");
+      toast.success("Perfil actualizado correctamente");
     } catch (error) {
       console.error('Unexpected error:', error);
-      toast.error("An unexpected error occurred");
+      toast.error("Error inesperado al guardar");
     } finally {
       setLoading(false);
     }
