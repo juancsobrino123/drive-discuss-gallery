@@ -95,7 +95,14 @@ const GallerySection = () => {
   const loadPhotos = async (eventId: string) => {
     const { data, error } = await supabase
       .from("photos")
-      .select("id, event_id, storage_path, thumbnail_path, caption, uploaded_by")
+      .select(`
+        id, 
+        event_id, 
+        get_masked_storage_path(storage_path) as storage_path, 
+        thumbnail_path, 
+        caption, 
+        get_masked_author_info(uploaded_by) as uploaded_by
+      `)
       .eq("event_id", eventId)
       .order("created_at", { ascending: false });
     if (error) {
@@ -104,7 +111,7 @@ const GallerySection = () => {
       return;
     }
 
-    const items = (data || []) as PhotoItem[];
+    const items = (data || []) as any[] as PhotoItem[];
     setPhotosByEvent((prev) => ({ ...prev, [eventId]: items }));
 
     // Build URLs (thumbs are public; originals are signed when downloading)
@@ -125,7 +132,15 @@ const GallerySection = () => {
   const loadPreview = async (eventId: string) => {
     const { data, error } = await supabase
       .from('photos')
-      .select('id, event_id, storage_path, thumbnail_path, caption, uploaded_by, is_thumbnail')
+      .select(`
+        id, 
+        event_id, 
+        get_masked_storage_path(storage_path) as storage_path, 
+        thumbnail_path, 
+        caption, 
+        get_masked_author_info(uploaded_by) as uploaded_by, 
+        is_thumbnail
+      `)
       .eq('event_id', eventId)
       .order('is_thumbnail', { ascending: false })
       .order('created_at', { ascending: true })
@@ -134,7 +149,7 @@ const GallerySection = () => {
       console.error(error);
       return;
     }
-    const items = (data || []) as PhotoItem[];
+    const items = (data || []) as any[] as PhotoItem[];
     setPreviewByEvent((prev) => ({ ...prev, [eventId]: items }));
     const newUrls: Record<string, string> = {};
     for (const p of items) {
@@ -304,10 +319,13 @@ const GallerySection = () => {
       if (!list) {
         const { data, error } = await supabase
           .from('photos')
-          .select('id, storage_path')
+          .select(`
+            id, 
+            get_masked_storage_path(storage_path) as storage_path
+          `)
           .eq('event_id', eventId);
         if (error) throw error;
-        list = data as PhotoItem[];
+        list = data as any[] as PhotoItem[];
       }
       for (const p of list) {
         const { data, error } = await supabase.storage.from('gallery').createSignedUrl(p.storage_path, 60);
