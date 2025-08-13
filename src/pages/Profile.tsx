@@ -7,7 +7,6 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
-// Simple SEO helpers without extra deps
 function setMeta(name: string, content: string) {
   let tag = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
   if (!tag) {
@@ -29,63 +28,46 @@ function setCanonical(href: string) {
 }
 
 const Profile = () => {
-  console.log('Profile: Component rendering...');
-  const authContext = useAuth();
-  console.log('Profile: Auth context received:', {
-    user: !!authContext.user,
-    profile: !!authContext.profile,
-    loading: authContext.loading,
-    roles: authContext.roles
-  });
-  
-  const { user, profile, signOut: authSignOut, loading: authLoading } = authContext;
-  const [loading, setLoading] = useState(false);
+  const { user, profile, loading: authLoading, signOut: authSignOut } = useAuth();
   const [username, setUsername] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // SEO
   useEffect(() => {
-    document.title = "Profile | AUTODEBATE";
-    setMeta("description", "Manage your AUTODEBATE profile: update username and avatar.");
+    document.title = "Perfil | AUTODEBATE";
+    setMeta("description", "Gestiona tu perfil de usuario en AUTODEBATE");
     setCanonical(`${window.location.origin}/profile`);
   }, []);
 
-  // Load profile data when user/profile changes
   useEffect(() => {
-    console.log('Profile: useEffect triggered', { profile });
     if (profile) {
-      console.log('Profile: Setting local state from context', profile);
-      setUsername(profile.username || "");
-      setAvatarUrl(profile.avatar_url || null);
+      setUsername(profile.username || '');
+      setAvatarUrl(profile.avatar_url || '');
     }
   }, [profile]);
 
   const saveProfile = async () => {
-    if (!user?.id) return;
+    if (!user?.id || !username.trim()) return;
     
     setLoading(true);
     
     try {
       const { error } = await supabase
         .from("profiles")
-        .update({ username })
+        .update({ username: username.trim() })
         .eq("id", user.id);
         
       if (error) {
         console.error('Profile update error:', error);
-        toast.error("Could not save username");
+        toast.error("Failed to update profile");
         return;
       }
 
-      const { error: authErr } = await supabase.auth.updateUser({
-        data: { display_name: username },
+      // Update display name in auth
+      await supabase.auth.updateUser({
+        data: { display_name: username.trim() }
       });
-      
-      if (authErr) {
-        console.error('Auth metadata update error:', authErr);
-        toast.error("Saved, but failed to sync auth display name");
-        return;
-      }
 
       toast.success("Profile updated");
     } catch (error) {
@@ -95,6 +77,7 @@ const Profile = () => {
       setLoading(false);
     }
   };
+
   const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user?.id) return;
@@ -122,12 +105,12 @@ const Profile = () => {
         .eq("id", user.id);
         
       if (updateError) {
-        console.error('Avatar update error:', updateError);
-        toast.error("Could not save avatar");
+        console.error('Profile update error:', updateError);
+        toast.error("Failed to update avatar");
         return;
       }
 
-      setAvatarUrl(url);
+      setAvatarUrl(url || "");
       toast.success("Avatar updated");
     } catch (error) {
       console.error('Unexpected error:', error);
@@ -178,35 +161,67 @@ const Profile = () => {
             <ArrowLeft className="h-4 w-4" />
             Volver
           </Button>
-          <h1 className="text-2xl font-bold text-foreground">Profile</h1>
+          <h1 className="text-2xl font-bold text-foreground">Mi Perfil</h1>
         </div>
 
-        <article className="bg-card border border-border rounded-lg p-6 shadow-sm">
+        <div className="space-y-6">
           <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
-              {avatarUrl ? (
-                <AvatarImage src={avatarUrl} alt="Profile avatar" />
-              ) : (
-                <AvatarFallback>U</AvatarFallback>
-              )}
+            <Avatar className="h-20 w-20">
+              <AvatarImage src={avatarUrl} alt={username} />
+              <AvatarFallback className="text-lg bg-primary text-primary-foreground">
+                {username?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U"}
+              </AvatarFallback>
             </Avatar>
             <div>
-              <label className="block text-sm text-muted-foreground mb-2" htmlFor="avatar">Avatar</label>
-              <Input id="avatar" type="file" accept="image/*" onChange={onFileChange} />
+              <h2 className="text-lg font-semibold text-foreground">{username || user?.email}</h2>
+              <p className="text-sm text-muted-foreground">{user?.email}</p>
             </div>
           </div>
 
-          <div className="mt-6">
-            <label className="block text-sm text-muted-foreground mb-2" htmlFor="username">Username</label>
-            <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Your username" />
-            <div className="mt-4 flex gap-3">
-              <Button onClick={saveProfile} disabled={loading}>
-                Save Changes
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Nombre de usuario
+              </label>
+              <Input
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Ingresa tu nombre de usuario"
+                disabled={loading}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Avatar
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={onFileChange}
+                className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                disabled={loading}
+              />
+            </div>
+
+            <div className="flex gap-4 pt-4">
+              <Button
+                onClick={saveProfile}
+                disabled={loading || !username.trim()}
+                className="flex-1"
+              >
+                {loading ? "Guardando..." : "Guardar cambios"}
               </Button>
-              <Button variant="outline" onClick={handleSignOut}>Log out</Button>
+              <Button
+                variant="destructive"
+                onClick={handleSignOut}
+                disabled={loading}
+              >
+                Cerrar sesión
+              </Button>
             </div>
           </div>
-        </article>
+        </div>
       </section>
     </main>
   );

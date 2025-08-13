@@ -18,8 +18,6 @@ const Navbar = () => {
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
 
-  console.log('Navbar render:', { user: !!user, profile: !!profile, loading });
-
   const navItems = [
     { label: t('nav.home'), href: '/' },
     { label: t('nav.gallery'), href: '/galeria' },
