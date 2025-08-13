@@ -33,11 +33,21 @@ const Navbar = () => {
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
-      setProfile(null);
-      toast({ description: "Sesión cerrada correctamente" });
-      window.location.href = "/";
+      console.log('Attempting to sign out...');
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Logout error:', error);
+        toast({ description: "Error al cerrar sesión: " + error.message, variant: "destructive" });
+      } else {
+        console.log('Logout successful');
+        setProfile(null);
+        setUser(null);
+        toast({ description: "Sesión cerrada correctamente" });
+        // Force page reload to clear any cached state
+        window.location.reload();
+      }
     } catch (error) {
+      console.error('Unexpected logout error:', error);
       toast({ description: "Error al cerrar sesión", variant: "destructive" });
     }
   };
@@ -48,7 +58,7 @@ const Navbar = () => {
         .from('profiles')
         .select('username, avatar_url')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
       
       console.log('Profile data loaded:', data, 'Error:', error);
       

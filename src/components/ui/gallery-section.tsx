@@ -98,6 +98,7 @@ const GallerySection = () => {
       console.log('Loading events...');
       setLoadingEvents(true);
       try {
+        console.log('Starting to load events...');
         const { data, error } = await supabase
           .from("events")
           .select("id, title, description, event_date, location, created_by")
@@ -110,20 +111,17 @@ const GallerySection = () => {
           console.error('Error loading events:', error);
           toast({ description: "Error cargando eventos: " + error.message, variant: "destructive" });
           setEvents([]);
-          setLoadingEvents(false);
-          return;
+        } else {
+          console.log('Events loaded successfully:', data);
+          console.log('Number of events:', data?.length || 0);
+          setEvents(data || []);
         }
-        
-        console.log('Events loaded successfully:', data);
-        console.log('Number of events:', data?.length || 0);
-        
-        setEvents(data || []);
-        setLoadingEvents(false);
       } catch (err) {
         console.error('Unexpected error:', err);
         toast({ description: "Error inesperado cargando eventos", variant: "destructive" });
         setEvents([]);
       } finally {
+        console.log('Setting loadingEvents to false');
         setLoadingEvents(false);
       }
     };
