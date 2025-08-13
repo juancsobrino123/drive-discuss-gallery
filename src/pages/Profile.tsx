@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -28,10 +29,10 @@ function setCanonical(href: string) {
 }
 
 const Profile = () => {
-  const [loading, setLoading] = useState(true);
+  const { user, profile, signOut: authSignOut, loading: authLoading } = useAuth();
+  const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
 
   // SEO
   useEffect(() => {
@@ -40,98 +41,117 @@ const Profile = () => {
     setCanonical(`${window.location.origin}/profile`);
   }, []);
 
-  // Auth and profile loading
+  // Load profile data when user/profile changes
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      const uid = session?.user?.id ?? null;
-      setUserId(uid);
-      if (uid) {
-        // Defer to avoid deadlocks
-        setTimeout(() => loadProfile(uid), 0);
-      }
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const uid = session?.user?.id ?? null;
-      setUserId(uid);
-      if (uid) loadProfile(uid);
-      else setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const loadProfile = async (uid: string) => {
-    setLoading(true);
-    const { data, error } = await (supabase as any)
-      .from("profiles")
-      .select("username, avatar_url")
-      .eq("id", uid)
-      .maybeSingle();
-
-    if (error) {
-      toast.error("Failed to load profile");
+    if (profile) {
+      setUsername(profile.username || "");
+      setAvatarUrl(profile.avatar_url || null);
     }
-
-    if (!data) {
-      // Ensure profile exists
-      try {
-        await (supabase as any).from("profiles").insert({ id: uid });
-      } catch {}
-      setUsername("");
-      setAvatarUrl(null);
-    } else {
-      setUsername(data.username ?? "");
-      setAvatarUrl(data.avatar_url ?? null);
-    }
-    setLoading(false);
-  };
+  }, [profile]);
 
   const saveProfile = async () => {
-    if (!userId) return;
-    const { error } = await (supabase as any)
-      .from("profiles")
-      .update({ username })
-      .eq("id", userId);
-    if (error) return toast.error("Could not save username");
+    if (!user?.id) return;
+    
+    setLoading(true);
+    
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ username })
+        .eq("id", user.id);
+        
+      if (error) {
+        console.error('Profile update error:', error);
+        toast.error("Could not save username");
+        return;
+      }
 
-    const { error: authErr } = await supabase.auth.updateUser({
-      data: { display_name: username },
-    });
-    if (authErr) return toast.error("Saved, but failed to sync auth display name");
+      const { error: authErr } = await supabase.auth.updateUser({
+        data: { display_name: username },
+      });
+      
+      if (authErr) {
+        console.error('Auth metadata update error:', authErr);
+        toast.error("Saved, but failed to sync auth display name");
+        return;
+      }
 
-    toast.success("Profile updated");
+      toast.success("Profile updated");
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setLoading(false);
+    }
   };
   const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !userId) return;
-    const path = `${userId}/avatar-${Date.now()}-${file.name}`;
-    const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
-    if (uploadError) return toast.error("Upload failed");
+    if (!file || !user?.id) return;
+    
+    setLoading(true);
+    
+    try {
+      const path = `${user.id}/avatar-${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { upsert: true });
+        
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        toast.error("Upload failed");
+        return;
+      }
 
-    const { data: publicUrl } = supabase.storage.from("avatars").getPublicUrl(path);
-    const url = publicUrl?.publicUrl ?? null;
+      const { data: publicUrl } = supabase.storage.from("avatars").getPublicUrl(path);
+      const url = publicUrl?.publicUrl ?? null;
 
-    const { error: updateError } = await (supabase as any)
-      .from("profiles")
-      .update({ avatar_url: url })
-      .eq("id", userId);
-    if (updateError) return toast.error("Could not save avatar");
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: url })
+        .eq("id", user.id);
+        
+      if (updateError) {
+        console.error('Avatar update error:', updateError);
+        toast.error("Could not save avatar");
+        return;
+      }
 
-    setAvatarUrl(url);
-    toast.success("Avatar updated");
+      setAvatarUrl(url);
+      toast.success("Avatar updated");
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    toast.success("Signed out");
-    window.location.href = "/";
+  const handleSignOut = async () => {
+    try {
+      await authSignOut();
+      toast.success("Signed out");
+      window.location.href = "/";
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error("Error signing out");
+    }
   };
 
-  if (!userId && !loading) {
-    // Not logged in
+  // Redirect if not authenticated
+  if (!authLoading && !user) {
     window.location.href = "/auth";
     return null;
+  }
+
+  // Show loading while auth is loading
+  if (authLoading) {
+    return (
+      <main className="min-h-screen bg-background pt-20">
+        <section className="container mx-auto px-4 max-w-2xl">
+          <div className="text-center">Cargando...</div>
+        </section>
+      </main>
+    );
   }
 
   return (
@@ -172,7 +192,7 @@ const Profile = () => {
               <Button onClick={saveProfile} disabled={loading}>
                 Save Changes
               </Button>
-              <Button variant="outline" onClick={signOut}>Log out</Button>
+              <Button variant="outline" onClick={handleSignOut}>Log out</Button>
             </div>
           </div>
         </article>

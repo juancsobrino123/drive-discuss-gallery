@@ -78,9 +78,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     try {
+      console.log('AuthProvider: Starting sign out...');
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (error) {
+        console.error('AuthProvider: Sign out error:', error);
+        throw error;
+      }
       
+      console.log('AuthProvider: Sign out successful, clearing state...');
       // Clear all state
       setUser(null);
       setSession(null);
@@ -89,7 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       return Promise.resolve();
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('AuthProvider: Sign out failed:', error);
       throw error;
     }
   };
