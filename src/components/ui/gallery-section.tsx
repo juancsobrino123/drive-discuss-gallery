@@ -1,44 +1,250 @@
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Download, Eye, Calendar, MapPin } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useToast } from "@/components/ui/use-toast";
+import { Download, Eye, Calendar, MapPin, Plus, Upload, Trash2, Pencil } from "lucide-react";
 import galleryPreview from "@/assets/gallery-preview.jpg";
 import { useTranslation } from "react-i18next";
 
+// Minimal local types (Supabase types file doesn't include these yet)
+interface EventItem {
+  id: string;
+  title: string;
+  description: string | null;
+  event_date: string | null;
+  location: string | null;
+  created_by: string;
+}
+
+interface PhotoItem {
+  id: string;
+  event_id: string;
+  storage_path: string;
+  thumbnail_path: string | null;
+  caption: string | null;
+  uploaded_by: string;
+}
+
+const useRoles = () => {
+  const [roles, setRoles] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const uid = sessionData.session?.user?.id;
+      if (!uid) {
+        if (mounted) {
+          setRoles([]);
+          setLoading(false);
+        }
+        return;
+      }
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", uid);
+      if (error) {
+        console.error("Error fetching roles", error);
+      }
+      if (mounted) {
+        setRoles(data?.map((r: any) => r.role) ?? []);
+        setLoading(false);
+      }
+    };
+    load();
+    const { data: sub } = supabase.auth.onAuthStateChange(() => load());
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
+
+  const canCreateEvent = roles.includes("copiloto") || roles.includes("admin");
+  const canUpload = roles.includes("copiloto") || roles.includes("admin");
+  const isAdmin = roles.includes("admin");
+  const canDownload = roles.length > 0; // any authenticated role
+
+  return { roles, loading, canCreateEvent, canUpload, isAdmin, canDownload };
+};
+
 const GallerySection = () => {
   const { t } = useTranslation();
-  const events = [
-    {
-      title: "Tokyo Auto Salon 2024",
-      date: "January 12-14, 2024",
-      location: "Makuhari Messe, Tokyo",
-      photos: 156,
-      featured: true
-    },
-    {
-      title: "SEMA Show Las Vegas",
-      date: "October 31 - Nov 3, 2023",
-      location: "Las Vegas Convention Center",
-      photos: 243
-    },
-    {
-      title: "Goodwood Festival",
-      date: "July 13-16, 2023",
-      location: "Goodwood, UK",
-      photos: 189
-    },
-    {
-      title: "Formula Drift Championship",
-      date: "August 25-26, 2023",
-      location: "Long Beach, CA",
-      photos: 201
+  const { toast } = useToast();
+  const [events, setEvents] = useState<EventItem[]>([]);
+  const [photosByEvent, setPhotosByEvent] = useState<Record<string, PhotoItem[]>>({});
+  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [newEvent, setNewEvent] = useState({ title: "", date: "", location: "", description: "" });
+
+  const { canCreateEvent, canUpload, isAdmin, canDownload } = useRoles();
+
+  // Load events from Supabase
+  useEffect(() => {
+    const loadEvents = async () => {
+      const { data, error } = await supabase
+        .from("events")
+        .select("id, title, description, event_date, location, created_by")
+        .order("event_date", { ascending: false });
+      if (error) {
+        console.error(error);
+        toast({ description: "Error cargando eventos" });
+        return;
+      }
+      setEvents(data as EventItem[]);
+    };
+    loadEvents();
+  }, [toast]);
+
+  // Load photos for selected event
+  const loadPhotos = async (eventId: string) => {
+    const { data, error } = await supabase
+      .from("photos")
+      .select("id, event_id, storage_path, thumbnail_path, caption, uploaded_by")
+      .eq("event_id", eventId)
+      .order("created_at", { ascending: false });
+    if (error) {
+      console.error(error);
+      toast({ description: "Error cargando fotos" });
+      return;
     }
-  ];
+
+    const items = (data || []) as PhotoItem[];
+    setPhotosByEvent((prev) => ({ ...prev, [eventId]: items }));
+
+    // Build URLs (thumbs are public; originals are signed when downloading)
+    const newUrls: Record<string, string> = {};
+    for (const p of items) {
+      if (p.thumbnail_path) {
+        const { data: pub } = supabase.storage.from("gallery-thumbs").getPublicUrl(p.thumbnail_path);
+        if (pub?.publicUrl) newUrls[p.id] = pub.publicUrl;
+      } else {
+        // Fallback to placeholder
+        newUrls[p.id] = galleryPreview;
+      }
+    }
+    setPhotoUrls((prev) => ({ ...prev, ...newUrls }));
+  };
+
+  const handleCreateEvent = async () => {
+    try {
+      setCreating(true);
+      const { data: session } = await supabase.auth.getSession();
+      const uid = session.session?.user?.id;
+      if (!uid) {
+        toast({ description: "Inicia sesión para crear eventos" });
+        return;
+      }
+      const { error } = await supabase.from("events").insert({
+        title: newEvent.title,
+        description: newEvent.description || null,
+        event_date: newEvent.date || null,
+        location: newEvent.location || null,
+        created_by: uid,
+      });
+      if (error) throw error;
+      toast({ description: "Evento creado" });
+      setNewEvent({ title: "", date: "", location: "", description: "" });
+      // Reload events
+      const { data } = await supabase
+        .from("events")
+        .select("id, title, description, event_date, location, created_by")
+        .order("event_date", { ascending: false });
+      setEvents((data || []) as EventItem[]);
+    } catch (e: any) {
+      console.error(e);
+      toast({ description: e.message || "No se pudo crear el evento" });
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleUpload = async (eventId: string, files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    try {
+      setUploading(true);
+      const { data: session } = await supabase.auth.getSession();
+      const uid = session.session?.user?.id;
+      if (!uid) {
+        toast({ description: "Inicia sesión para subir fotos" });
+        return;
+      }
+      for (const file of Array.from(files)) {
+        const basePath = `${uid}/${eventId}/${Date.now()}_${file.name}`;
+        const { error: upErr } = await supabase.storage.from("gallery").upload(basePath, file, { upsert: false });
+        if (upErr) throw upErr;
+        // Optional: also upload as thumbnail for now (same file). In real flow you'd resize client-side.
+        const { error: thErr } = await supabase.storage.from("gallery-thumbs").upload(basePath, file, { upsert: false });
+        if (thErr) {
+          console.warn("Thumb upload failed", thErr);
+        }
+        const { error: insErr } = await supabase.from("photos").insert({
+          event_id: eventId,
+          storage_path: basePath,
+          thumbnail_path: basePath,
+          caption: null,
+          uploaded_by: uid,
+        });
+        if (insErr) throw insErr;
+      }
+      toast({ description: "Fotos subidas" });
+      await loadPhotos(eventId);
+    } catch (e: any) {
+      console.error(e);
+      toast({ description: e.message || "Error al subir fotos" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeletePhoto = async (photo: PhotoItem) => {
+    try {
+      const { error } = await supabase.from("photos").delete().eq("id", photo.id);
+      if (error) throw error;
+      // Try deleting storage objects (policy allows owner or admin)
+      await supabase.storage.from("gallery").remove([photo.storage_path]);
+      if (photo.thumbnail_path) {
+        await supabase.storage.from("gallery-thumbs").remove([photo.thumbnail_path]);
+      }
+      toast({ description: "Foto eliminada" });
+      if (photo.event_id) await loadPhotos(photo.event_id);
+    } catch (e: any) {
+      console.error(e);
+      toast({ description: e.message || "No se pudo eliminar" });
+    }
+  };
+
+  const handleDownload = async (photo: PhotoItem) => {
+    try {
+      if (!canDownload) {
+        toast({ description: "Inicia sesión para descargar" });
+        return;
+      }
+      const { data, error } = await supabase.storage
+        .from("gallery")
+        .createSignedUrl(photo.storage_path, 60);
+      if (error || !data?.signedUrl) throw error || new Error("No URL");
+      window.open(data.signedUrl, "_blank");
+    } catch (e: any) {
+      console.error(e);
+      toast({ description: e.message || "No se pudo descargar" });
+    }
+  };
+
+  const featuredTitle = useMemo(() => events[0]?.title || "Tokyo Auto Salon 2024", [events]);
 
   return (
     <section id="gallery" className="py-20">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
             {t('gallery.heading')}
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -46,14 +252,53 @@ const GallerySection = () => {
           </p>
         </div>
 
+        <div className="flex justify-end mb-6">
+          {canCreateEvent && (
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="platform"><Plus className="w-4 h-4 mr-2"/>Crear evento</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Nuevo evento</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4">
+                  <div className="grid gap-2">
+                    <Label>Título</Label>
+                    <Input value={newEvent.title} onChange={(e) => setNewEvent((s) => ({ ...s, title: e.target.value }))} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Fecha</Label>
+                    <Input type="date" value={newEvent.date} onChange={(e) => setNewEvent((s) => ({ ...s, date: e.target.value }))} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Ubicación</Label>
+                    <Input value={newEvent.location} onChange={(e) => setNewEvent((s) => ({ ...s, location: e.target.value }))} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Descripción</Label>
+                    <Input value={newEvent.description} onChange={(e) => setNewEvent((s) => ({ ...s, description: e.target.value }))} />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button onClick={handleCreateEvent} disabled={creating || !newEvent.title}>
+                      {creating ? 'Creando…' : 'Crear'}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
+
         {/* Featured Gallery Preview */}
-        <div className="mb-16">
+        <div className="mb-12">
           <Card className="overflow-hidden bg-gradient-card shadow-elegant">
             <div className="relative">
               <img 
                 src={galleryPreview} 
-                alt="Event photography gallery preview"
+                alt="Vista previa galería de eventos AUTODEBATE"
                 className="w-full h-64 md:h-96 object-cover"
+                loading="lazy"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
               <div className="absolute bottom-6 left-6 right-6">
@@ -62,16 +307,16 @@ const GallerySection = () => {
                   {t('gallery.latestEvent')}
                 </div>
                 <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">
-                  Tokyo Auto Salon 2024 - Complete Collection
+                  {featuredTitle}
                 </h3>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button variant="hero" size="lg">
                     <Eye className="w-5 h-5 mr-2" />
                     {t('gallery.viewGallery')}
                   </Button>
-                  <Button variant="platform" size="lg">
+                  <Button variant="platform" size="lg" disabled={!canDownload} onClick={() => toast({ description: canDownload ? 'Descarga comenzará al ver fotos' : 'Inicia sesión para descargar' })}>
                     <Download className="w-5 h-5 mr-2" />
-                    {t('gallery.downloadAll', { count: 156 })}
+                    {t('gallery.downloadAll', { count: 0 })}
                   </Button>
                 </div>
               </div>
@@ -81,53 +326,82 @@ const GallerySection = () => {
 
         {/* Event Galleries Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {events.map((event, index) => (
+          {events.map((event) => (
             <Card 
-              key={event.title}
-              className={`p-6 hover:shadow-royal transition-all duration-300 transform hover:-translate-y-2 bg-gradient-card ${
-                event.featured ? 'ring-2 ring-primary/20' : ''
-              }`}
+              key={event.id}
+              className={`p-6 hover:shadow-royal transition-all duration-300 transform hover:-translate-y-2 bg-gradient-card`}
             >
-              {event.featured && (
-                <div className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full mb-4 w-fit">
-                  {t('gallery.latest')}
-                </div>
-              )}
-
               <h3 className="text-lg font-bold text-foreground mb-3 line-clamp-2">
                 {event.title}
               </h3>
-              
               <div className="space-y-2 mb-4 text-sm text-muted-foreground">
                 <div className="flex items-center">
                   <Calendar className="w-4 h-4 mr-2" />
-                  {event.date}
+                  {event.event_date || '-'}
                 </div>
                 <div className="flex items-center">
                   <MapPin className="w-4 h-4 mr-2" />
-                  {event.location}
+                  {event.location || '-'}
                 </div>
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-primary font-semibold">
-                  {event.photos} {t('gallery.photos')}
-                </span>
                 <div className="flex gap-2">
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => { setSelectedEventId(event.id); loadPhotos(event.id); }}>
                     <Eye className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="sm">
-                    <Download className="w-4 h-4" />
-                  </Button>
+                  {canUpload && (
+                    <label className="inline-flex items-center">
+                      <input type="file" className="hidden" multiple onChange={(e) => handleUpload(event.id, e.target.files)} />
+                      <Button variant="ghost" size="sm" asChild>
+                        <span><Upload className="w-4 h-4" /></span>
+                      </Button>
+                    </label>
+                  )}
                 </div>
+                <Button variant="ghost" size="sm" disabled={!canDownload} onClick={() => toast({ description: canDownload ? 'Selecciona una foto para descargar' : 'Inicia sesión para descargar' })}>
+                  <Download className="w-4 h-4" />
+                </Button>
               </div>
             </Card>
           ))}
         </div>
 
+        {/* Photos of selected event */}
+        {selectedEventId && (
+          <div className="mt-10">
+            <h3 className="text-2xl font-bold text-foreground mb-4">Fotos</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {(photosByEvent[selectedEventId] || []).map((p) => (
+                <Card key={p.id} className="overflow-hidden">
+                  <img
+                    src={photoUrls[p.id]}
+                    alt={p.caption || 'Foto de evento'}
+                    className="w-full h-48 object-cover"
+                    loading="lazy"
+                  />
+                  <div className="p-2 flex items-center justify-between">
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="icon" onClick={() => handleDownload(p)} disabled={!canDownload} aria-label="Descargar">
+                        <Download className="w-4 h-4" />
+                      </Button>
+                      {/* Placeholder for future edit caption */}
+                      <Button variant="ghost" size="icon" disabled aria-label="Editar">
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => handleDeletePhoto(p)} disabled={uploading} aria-label="Eliminar">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Gallery Features */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center mt-12">
           <div className="space-y-4">
             <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center mx-auto">
               <Download className="w-8 h-8 text-primary" />
@@ -137,7 +411,6 @@ const GallerySection = () => {
               {t('gallery.features.freeDesc')}
             </p>
           </div>
-          
           <div className="space-y-4">
             <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center mx-auto">
               <Eye className="w-8 h-8 text-primary" />
@@ -147,7 +420,6 @@ const GallerySection = () => {
               {t('gallery.features.qualityDesc')}
             </p>
           </div>
-
           <div className="space-y-4">
             <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center mx-auto">
               <Calendar className="w-8 h-8 text-primary" />
