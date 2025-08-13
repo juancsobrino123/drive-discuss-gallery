@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,10 +11,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const { user, profile, signOut } = useAuth();
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
 
@@ -33,79 +33,14 @@ const Navbar = () => {
 
   const handleSignOut = async () => {
     try {
-      console.log('Attempting to sign out...');
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Logout error:', error);
-        toast({ description: "Error al cerrar sesión: " + error.message, variant: "destructive" });
-      } else {
-        console.log('Logout successful');
-        setProfile(null);
-        setUser(null);
-        toast({ description: "Sesión cerrada correctamente" });
-        // Force page reload to clear any cached state
-        window.location.reload();
-      }
+      await signOut();
+      toast({ description: "Sesión cerrada correctamente" });
+      window.location.href = "/";
     } catch (error) {
-      console.error('Unexpected logout error:', error);
+      console.error('Logout error:', error);
       toast({ description: "Error al cerrar sesión", variant: "destructive" });
     }
   };
-
-  const loadProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('username, avatar_url')
-        .eq('id', userId)
-        .maybeSingle();
-      
-      console.log('Profile data loaded:', data, 'Error:', error);
-      
-      if (!error && data) {
-        setProfile(data);
-      } else {
-        // If no profile exists or username is empty, try to get a better display name
-        const { data: userData } = await supabase.auth.getUser();
-        if (userData.user) {
-          const displayName = userData.user.user_metadata?.display_name || 
-                            userData.user.user_metadata?.full_name || 
-                            userData.user.user_metadata?.name ||
-                            userData.user.email?.split('@')[0] || 
-                            'Usuario';
-          
-          // Try to update or insert profile with better username
-          await supabase
-            .from('profiles')
-            .upsert({ 
-              id: userId, 
-              username: displayName 
-            });
-          setProfile({ username: displayName, avatar_url: data?.avatar_url || null });
-        }
-      }
-    } catch (err) {
-      console.error('Error loading profile:', err);
-    }
-  };
-
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        loadProfile(session.user.id);
-      } else {
-        setProfile(null);
-      }
-    });
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        loadProfile(session.user.id);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, []);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">

@@ -31,55 +31,14 @@ interface PhotoItem {
   is_thumbnail?: boolean;
 }
 
-const useRoles = () => {
-  const [roles, setRoles] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const uid = sessionData.session?.user?.id ?? null;
-      if (mounted) setUserId(uid);
-      if (!uid) {
-        if (mounted) {
-          setRoles([]);
-          setLoading(false);
-        }
-        return;
-      }
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", uid);
-      if (error) {
-        console.error("Error fetching roles", error);
-      }
-      if (mounted) {
-        setRoles(data?.map((r: any) => r.role) ?? []);
-        setLoading(false);
-      }
-    };
-    load();
-    const { data: sub } = supabase.auth.onAuthStateChange(() => load());
-    return () => {
-      mounted = false;
-      sub.subscription.unsubscribe();
-    };
-  }, []);
-
-  const canCreateEvent = roles.includes("copiloto") || roles.includes("admin");
-  const canUpload = roles.includes("copiloto") || roles.includes("admin");
-  const isAdmin = roles.includes("admin");
-  const canDownload = roles.length > 0; // any authenticated role
-
-  return { roles, loading, userId, canCreateEvent, canUpload, isAdmin, canDownload };
-};
+// Use the global auth context instead of local state
+import { useAuth } from "@/hooks/use-auth";
 
 const GallerySection = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { user, canCreateEvent, canUpload, isAdmin, canDownload, loading: authLoading } = useAuth();
+  
   const [events, setEvents] = useState<EventItem[]>([]);
   const [photosByEvent, setPhotosByEvent] = useState<Record<string, PhotoItem[]>>({});
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
@@ -89,8 +48,6 @@ const GallerySection = () => {
   const [uploading, setUploading] = useState(false);
   const [newEvent, setNewEvent] = useState({ title: "", date: "", location: "", description: "" });
   const [loadingEvents, setLoadingEvents] = useState(true);
-
-  const { canCreateEvent, canUpload, isAdmin, canDownload, userId } = useRoles();
 
   // Load events from Supabase
   useEffect(() => {
@@ -204,20 +161,19 @@ const GallerySection = () => {
   }, [events]);
 
   const handleCreateEvent = async () => {
+    if (!user) {
+      toast({ description: "Inicia sesión para crear eventos" });
+      return;
+    }
+    
     try {
       setCreating(true);
-      const { data: session } = await supabase.auth.getSession();
-      const uid = session.session?.user?.id;
-      if (!uid) {
-        toast({ description: "Inicia sesión para crear eventos" });
-        return;
-      }
       const { error } = await supabase.from("events").insert({
         title: newEvent.title,
         description: newEvent.description || null,
         event_date: newEvent.date || null,
         location: newEvent.location || null,
-        created_by: uid,
+        created_by: user.id,
       });
       if (error) throw error;
       toast({ description: "Evento creado" });
@@ -238,16 +194,15 @@ const GallerySection = () => {
 
   const handleUpload = async (eventId: string, files: FileList | null) => {
     if (!files || files.length === 0) return;
+    if (!user) {
+      toast({ description: "Inicia sesión para subir fotos" });
+      return;
+    }
+    
     try {
       setUploading(true);
-      const { data: session } = await supabase.auth.getSession();
-      const uid = session.session?.user?.id;
-      if (!uid) {
-        toast({ description: "Inicia sesión para subir fotos" });
-        return;
-      }
       for (const file of Array.from(files)) {
-        const basePath = `${uid}/${eventId}/${Date.now()}_${file.name}`;
+        const basePath = `${user.id}/${eventId}/${Date.now()}_${file.name}`;
         const { error: upErr } = await supabase.storage.from("gallery").upload(basePath, file, { upsert: false });
         if (upErr) throw upErr;
         // Optional: also upload as thumbnail for now (same file). In real flow you'd resize client-side.
@@ -260,7 +215,7 @@ const GallerySection = () => {
           storage_path: basePath,
           thumbnail_path: basePath,
           caption: null,
-          uploaded_by: uid,
+          uploaded_by: user.id,
         });
         if (insErr) throw insErr;
       }
@@ -368,6 +323,15 @@ const GallerySection = () => {
   };
 
   const featuredTitle = useMemo(() => events[0]?.title || "Tokyo Auto Salon 2024", [events]);
+
+  // Show loading state while auth is loading
+  if (authLoading) {
+    return (
+      <div className="flex justify-center items-center py-8">
+        <div className="text-muted-foreground">Cargando...</div>
+      </div>
+    );
+  }
 
   if (loadingEvents) {
     return (
