@@ -107,17 +107,19 @@ const GallerySection = () => {
         
         if (error) {
           console.error('Error loading events:', error);
-          toast({ description: "Error cargando eventos: " + error.message });
+          toast({ description: "Error cargando eventos: " + error.message, variant: "destructive" });
+          setEvents([]);
           return;
         }
         
         console.log('Events loaded successfully:', data);
         console.log('Number of events:', data?.length || 0);
         
-        setEvents(data as EventItem[]);
+        setEvents(data || []);
       } catch (err) {
         console.error('Unexpected error:', err);
-        toast({ description: "Error inesperado cargando eventos" });
+        toast({ description: "Error inesperado cargando eventos", variant: "destructive" });
+        setEvents([]);
       } finally {
         setLoadingEvents(false);
       }
