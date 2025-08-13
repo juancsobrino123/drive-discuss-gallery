@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ function setCanonical(href: string) {
 }
 
 const Profile = () => {
+  const navigate = useNavigate();
   const { user, profile, loading: authLoading, signOut: authSignOut, reloadProfile } = useAuth();
   const [username, setUsername] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -84,6 +86,9 @@ const Profile = () => {
       
       // Recargar el perfil desde la base de datos
       await reloadProfile();
+      
+      // Navegar al home después de guardar
+      navigate("/");
     } catch (error) {
       console.error('Unexpected error:', error);
       toast.error("Error inesperado al guardar");
@@ -140,8 +145,8 @@ const Profile = () => {
   const handleSignOut = async () => {
     try {
       await authSignOut();
-      toast.success("Signed out");
-      window.location.href = "/";
+      toast.success("Sesión cerrada");
+      navigate("/");
     } catch (error) {
       console.error('Logout error:', error);
       toast.error("Error signing out");
@@ -150,7 +155,7 @@ const Profile = () => {
 
   // Redirect if not authenticated
   if (!authLoading && !user) {
-    window.location.href = "/auth";
+    navigate("/auth");
     return null;
   }
 
@@ -172,7 +177,7 @@ const Profile = () => {
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={() => window.history.back()}
+            onClick={() => navigate("/")}
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
