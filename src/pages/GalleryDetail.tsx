@@ -125,23 +125,15 @@ const GalleryDetail = () => {
     if (!eventId) return;
     const { data, error } = await supabase
       .from('photos')
-      .select(`
-        id, 
-        event_id, 
-        get_masked_storage_path(storage_path) as storage_path, 
-        thumbnail_path, 
-        caption, 
-        get_masked_author_info(uploaded_by) as uploaded_by, 
-        is_thumbnail
-      `)
+      .select('id, event_id, storage_path, thumbnail_path, caption, uploaded_by, is_thumbnail')
       .eq('event_id', eventId)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: false });
     if (error) {
       console.error(error);
       toast({ description: 'Error cargando fotos' });
       return;
     }
-    const items = (data || []) as any[] as PhotoItem[];
+    const items = (data || []) as PhotoItem[];
     setPhotos(items);
     const urls: Record<string, string> = {};
     for (const p of items) {
