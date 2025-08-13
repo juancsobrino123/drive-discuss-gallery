@@ -104,11 +104,13 @@ const GallerySection = () => {
           .order("created_at", { ascending: false });
         
         console.log('Query result:', { data, error });
+        console.log('Loading events finished, setting loadingEvents to false');
         
         if (error) {
           console.error('Error loading events:', error);
           toast({ description: "Error cargando eventos: " + error.message, variant: "destructive" });
           setEvents([]);
+          setLoadingEvents(false);
           return;
         }
         
@@ -116,6 +118,7 @@ const GallerySection = () => {
         console.log('Number of events:', data?.length || 0);
         
         setEvents(data || []);
+        setLoadingEvents(false);
       } catch (err) {
         console.error('Unexpected error:', err);
         toast({ description: "Error inesperado cargando eventos", variant: "destructive" });
