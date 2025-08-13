@@ -25,81 +25,89 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const signOut = async () => {
-    try {
-      await supabase.auth.signOut();
-      setUser(null);
-      setSession(null);
-      setProfile(null);
-      setRoles([]);
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
-
-  const loadUserData = async (userId: string) => {
-    try {
-      // Load profile
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('username, avatar_url')
-        .eq('id', userId)
-        .maybeSingle();
-
-      if (profileData) {
-        setProfile(profileData);
-      } else {
-        setProfile(null);
-      }
-
-      // Load roles
-      const { data: rolesData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId);
-
-      setRoles(rolesData?.map((r: any) => r.role) || []);
-    } catch (error) {
-      console.error('Error loading user data:', error);
-      setProfile(null);
-      setRoles([]);
-    }
+    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
+    setProfile(null);
+    setRoles([]);
   };
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        loadUserData(session.user.id);
-      }
-      
-      setLoading(false);
-    });
+    let mounted = true;
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          loadUserData(session.user.id);
-        } else {
+    // Función para cargar datos del usuario
+    const loadUserData = async (userId: string) => {
+      try {
+        // Cargar perfil
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('username, avatar_url')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (mounted) {
+          if (profileData) {
+            setProfile(profileData);
+          } else {
+            // Crear perfil si no existe
+            const username = user?.email?.split('@')[0] || 'Usuario';
+            setProfile({ username, avatar_url: null });
+          }
+        }
+
+        // Cargar roles
+        const { data: rolesData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId);
+
+        if (mounted) {
+          setRoles(rolesData?.map((r: any) => r.role) || []);
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        if (mounted) {
           setProfile(null);
           setRoles([]);
         }
       }
-    );
+    };
 
-    return () => subscription.unsubscribe();
-  }, []);
+    // Manejar cambios de autenticación
+    const handleAuthChange = (event: string, session: Session | null) => {
+      if (!mounted) return;
 
-  // Compute permission flags
-  const canCreateEvent = roles.includes("copiloto") || roles.includes("admin");
-  const canUpload = roles.includes("copiloto") || roles.includes("admin");
-  const isAdmin = roles.includes("admin");
+      setSession(session);
+      setUser(session?.user || null);
+
+      if (session?.user) {
+        loadUserData(session.user.id);
+      } else {
+        setProfile(null);
+        setRoles([]);
+      }
+      
+      setLoading(false);
+    };
+
+    // Configurar listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
+
+    // Verificar sesión inicial
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      handleAuthChange('INITIAL_SESSION', session);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [user?.email]);
+
+  // Permisos calculados
+  const canCreateEvent = roles.includes('copiloto') || roles.includes('admin');
+  const canUpload = roles.includes('copiloto') || roles.includes('admin');
+  const isAdmin = roles.includes('admin');
   const canDownload = !!user;
 
   const value: AuthContextType = {
