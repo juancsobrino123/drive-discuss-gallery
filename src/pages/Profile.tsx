@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 // Simple SEO helpers without extra deps
@@ -136,7 +137,18 @@ const Profile = () => {
   return (
     <main className="min-h-screen bg-background pt-20">
       <section className="container mx-auto px-4 max-w-2xl">
-        <h1 className="text-2xl font-bold text-foreground mb-6">Profile</h1>
+        <div className="flex items-center gap-4 mb-6">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => window.history.back()}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Volver
+          </Button>
+          <h1 className="text-2xl font-bold text-foreground">Profile</h1>
+        </div>
 
         <article className="bg-card border border-border rounded-lg p-6 shadow-sm">
           <div className="flex items-center gap-4">
