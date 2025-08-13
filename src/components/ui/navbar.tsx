@@ -14,9 +14,11 @@ import { useToast } from "@/hooks/use-toast";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, loading } = useAuth();
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
+
+  console.log('Navbar render:', { user: !!user, profile: !!profile, loading });
 
   const navItems = [
     { label: t('nav.home'), href: '/' },

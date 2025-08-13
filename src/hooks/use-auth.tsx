@@ -2,6 +2,8 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
+console.log('Auth hook loading...');
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -103,26 +105,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
+    console.log('Auth Provider: useEffect starting...');
 
     const handleAuthChange = async (event: string, session: Session | null) => {
+      console.log('Auth Provider: handleAuthChange called', { event, session: !!session, mounted });
       if (!mounted) return;
       
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        console.log('Auth Provider: User found, loading data...');
         try {
           await loadProfile(session.user.id);
           await loadRoles(session.user.id);
+          console.log('Auth Provider: User data loaded successfully');
         } catch (error) {
           console.error('Error loading user data:', error);
         }
       } else {
+        console.log('Auth Provider: No user, clearing data...');
         setProfile(null);
         setRoles([]);
       }
       
       if (mounted) {
+        console.log('Auth Provider: Setting loading to false');
         setLoading(false);
       }
     };
