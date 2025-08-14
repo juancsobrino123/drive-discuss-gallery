@@ -55,8 +55,10 @@
     }
   },
   "blog": {
+    "pageTitle": "AUTODEBATE Blog — News and articles",
+    "pageDescription": "Read articles and news from the automotive world at AUTODEBATE. Opinion, reviews and automotive culture.",
     "heading": "Automotive Insights & Discussions",
-    "subheading": "Deep dives into automotive culture, technical analysis, and community discussions. Join the conversation about everything cars.",
+    "subheading": "Discover the latest trends, deep analysis and fascinating stories from the automotive world",
     "featured": "Featured",
     "readMore": "Read More",
     "loadMore": "Load More Articles",
@@ -71,7 +73,25 @@
     "newsletterDesc": "Get the latest automotive insights delivered to your inbox.",
     "yourEmail": "Your email",
     "subscribe": "Subscribe",
-    "share": "Share"
+    "share": "Share",
+    "newPost": "New Post",
+    "createPost": "Create New Blog Post",
+    "title": "Title",
+    "titlePlaceholder": "Enter post title...",
+    "featuredImage": "Featured Image (Optional)",
+    "uploadText": "Click to upload or drag and drop",
+    "uploadFormats": "PNG, JPG, WebP up to 10MB",
+    "excerpt": "Excerpt",
+    "excerptPlaceholder": "Brief description of the post...",
+    "content": "Content",
+    "contentPlaceholder": "Write your post content...",
+    "publishImmediately": "Publish immediately",
+    "cancel": "Cancel",
+    "creating": "Creating...",
+    "createPostButton": "Create Post",
+    "noPosts": "No blog posts yet",
+    "noPostsDesc": "Stay tuned for exciting automotive content!",
+    "createFirstPost": "Create First Post"
   },
   "events": {
     "heading": "Automotive Events Calendar",

@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { BookOpen, Plus, User as UserIcon, Calendar, Upload, X, Image as ImageIcon } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { useTranslation } from "react-i18next";
 
 interface BlogPost {
   id: string;
@@ -41,6 +42,7 @@ const setMeta = (name: string, content: string) => {
 const Blog = () => {
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
+  const { t } = useTranslation();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -53,17 +55,17 @@ const Blog = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = "Blog de AUTODEBATE — Noticias y artículos";
+    document.title = t('blog.pageTitle');
     setMeta(
       "description",
-      "Lee artículos y noticias del mundo motor en AUTODEBATE. Opinión, reviews y cultura automotriz."
+      t('blog.pageDescription')
     );
     const link: HTMLLinkElement =
       (document.querySelector('link[rel="canonical"]') as HTMLLinkElement) ||
       Object.assign(document.createElement("link"), { rel: "canonical" });
     link.href = window.location.origin + "/blog";
     if (!link.parentElement) document.head.appendChild(link);
-  }, []);
+  }, [t]);
 
   const fetchPosts = async () => {
     const { data, error } = await supabase
@@ -218,7 +220,7 @@ const Blog = () => {
                 AUTODEBATE
               </h1>
               <p className="text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-8">
-                Descubre las últimas tendencias, análisis profundos y historias fascinantes del mundo automotriz
+                {t('blog.subheading')}
               </p>
               
               {isAdmin && (
@@ -227,26 +229,26 @@ const Blog = () => {
                   <DialogTrigger asChild>
                     <Button className="flex items-center gap-2">
                       <Plus className="h-4 w-4" />
-                      New Post
+                      {t('blog.newPost')}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle>Create New Blog Post</DialogTitle>
+                      <DialogTitle>{t('blog.createPost')}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-6">
                       <div>
-                        <Label htmlFor="post-title">Title</Label>
+                        <Label htmlFor="post-title">{t('blog.title')}</Label>
                         <Input
                           id="post-title"
-                          placeholder="Enter post title..."
+                          placeholder={t('blog.titlePlaceholder')}
                           value={newPostTitle}
                           onChange={(e) => setNewPostTitle(e.target.value)}
                         />
                       </div>
                       
                       <div>
-                        <Label htmlFor="post-image">Featured Image (Optional)</Label>
+                        <Label htmlFor="post-image">{t('blog.featuredImage')}</Label>
                         <div className="mt-2">
                           {imagePreview ? (
                             <div className="relative">
@@ -268,14 +270,14 @@ const Blog = () => {
                           ) : (
                             <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
                               <ImageIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                              <div className="space-y-2">
-                                <p className="text-sm text-muted-foreground">
-                                  Click to upload or drag and drop
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  PNG, JPG, WebP up to 10MB
-                                </p>
-                              </div>
+                                <div className="space-y-2">
+                                  <p className="text-sm text-muted-foreground">
+                                    {t('blog.uploadText')}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {t('blog.uploadFormats')}
+                                  </p>
+                                </div>
                               <Input
                                 id="post-image"
                                 type="file"
@@ -289,20 +291,20 @@ const Blog = () => {
                       </div>
                       
                       <div>
-                        <Label htmlFor="post-excerpt">Excerpt</Label>
+                        <Label htmlFor="post-excerpt">{t('blog.excerpt')}</Label>
                         <Textarea
                           id="post-excerpt"
-                          placeholder="Brief description of the post..."
+                          placeholder={t('blog.excerptPlaceholder')}
                           value={newPostExcerpt}
                           onChange={(e) => setNewPostExcerpt(e.target.value)}
                           rows={2}
                         />
                       </div>
                       <div>
-                        <Label htmlFor="post-content">Content</Label>
+                        <Label htmlFor="post-content">{t('blog.content')}</Label>
                         <Textarea
                           id="post-content"
-                          placeholder="Write your post content..."
+                          placeholder={t('blog.contentPlaceholder')}
                           value={newPostContent}
                           onChange={(e) => setNewPostContent(e.target.value)}
                           rows={8}
@@ -314,7 +316,7 @@ const Blog = () => {
                           checked={newPostPublished}
                           onCheckedChange={setNewPostPublished}
                         />
-                        <Label htmlFor="post-published">Publish immediately</Label>
+                        <Label htmlFor="post-published">{t('blog.publishImmediately')}</Label>
                       </div>
                       <div className="flex gap-2 justify-end">
                         <Button
@@ -325,13 +327,13 @@ const Blog = () => {
                             setImagePreview(null);
                           }}
                         >
-                          Cancel
+                          {t('blog.cancel')}
                         </Button>
                         <Button
                           onClick={handleCreatePost}
                           disabled={createLoading || !newPostTitle.trim() || !newPostContent.trim() || !newPostExcerpt.trim()}
                         >
-                          {createLoading ? "Creating..." : "Create Post"}
+                          {createLoading ? t('blog.creating') : t('blog.createPostButton')}
                         </Button>
                       </div>
                     </div>
@@ -364,14 +366,14 @@ const Blog = () => {
                   <div className="text-center py-8">
                     <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-lg font-semibold text-foreground mb-2">
-                      No blog posts yet
+                      {t('blog.noPosts')}
                     </h3>
                     <p className="text-muted-foreground mb-4">
-                      Stay tuned for exciting automotive content!
+                      {t('blog.noPostsDesc')}
                     </p>
                     {isAdmin && (
                       <Button onClick={() => setCreateDialogOpen(true)}>
-                        Create First Post
+                        {t('blog.createFirstPost')}
                       </Button>
                     )}
                   </div>

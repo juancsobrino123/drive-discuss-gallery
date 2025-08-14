@@ -55,8 +55,10 @@
     }
   },
   "blog": {
+    "pageTitle": "Blog de AUTODEBATE — Noticias y artículos",
+    "pageDescription": "Lee artículos y noticias del mundo motor en AUTODEBATE. Opinión, reviews y cultura automotriz.",
     "heading": "Ideas y debates automotrices",
-    "subheading": "Análisis profundos de la cultura automotriz, contenido técnico y debates de la comunidad. Únete a la conversación sobre todo lo relacionado a autos.",
+    "subheading": "Descubre las últimas tendencias, análisis profundos y historias fascinantes del mundo automotriz",
     "featured": "Destacado",
     "readMore": "Leer más",
     "loadMore": "Cargar más artículos",
@@ -71,7 +73,25 @@
     "newsletterDesc": "Recibe en tu correo las últimas ideas automotrices.",
     "yourEmail": "Tu correo",
     "subscribe": "Suscribirse",
-    "share": "Compartir"
+    "share": "Compartir",
+    "newPost": "Nueva publicación",
+    "createPost": "Crear nueva publicación",
+    "title": "Título",
+    "titlePlaceholder": "Ingresa el título de la publicación...",
+    "featuredImage": "Imagen destacada (Opcional)",
+    "uploadText": "Haz clic para subir o arrastra y suelta",
+    "uploadFormats": "PNG, JPG, WebP hasta 10MB",
+    "excerpt": "Extracto",
+    "excerptPlaceholder": "Breve descripción de la publicación...",
+    "content": "Contenido",
+    "contentPlaceholder": "Escribe el contenido de tu publicación...",
+    "publishImmediately": "Publicar inmediatamente",
+    "cancel": "Cancelar",
+    "creating": "Creando...",
+    "createPostButton": "Crear publicación",
+    "noPosts": "Aún no hay publicaciones",
+    "noPostsDesc": "¡Mantente al tanto del emocionante contenido automotriz!",
+    "createFirstPost": "Crear primera publicación"
   },
   "events": {
     "heading": "Calendario de eventos automotrices",
