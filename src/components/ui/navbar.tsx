@@ -20,7 +20,6 @@ const Navbar = () => {
 
   const navItems = [
     { label: t('nav.home'), href: '/' },
-    { label: t('nav.debate'), href: '#' },
     { label: t('nav.gallery'), href: '/galeria' },
     { label: t('nav.events'), href: '/eventos' },
     { label: t('nav.about'), href: '/about' },
@@ -61,22 +60,19 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                className="text-muted-foreground hover:text-primary transition-colors duration-300 font-medium"
-              >
-                {item.label}
-              </a>
-            ))}
+            <a
+              href="/"
+              className="text-muted-foreground hover:text-primary transition-colors duration-300 font-medium"
+            >
+              {t('nav.home')}
+            </a>
             
             {/* Debate Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors duration-300 font-medium">
                 {t('nav.debate')} <ChevronDown className="h-4 w-4" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-background border border-border">
+              <DropdownMenuContent className="bg-background border border-border z-50">
                 <DropdownMenuItem asChild>
                   <a href="/blog" className="cursor-pointer text-foreground hover:text-primary">
                     Blog
@@ -89,6 +85,16 @@ const Navbar = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            
+            {navItems.slice(1).map((item) => (
+              <a
+                key={item.label}
+                href={item.href}
+                className="text-muted-foreground hover:text-primary transition-colors duration-300 font-medium"
+              >
+                {item.label}
+              </a>
+            ))}
           </div>
 
 {/* CTA + User Info (Desktop) */}
