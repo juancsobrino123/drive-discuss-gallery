@@ -41,6 +41,7 @@ const ForumDetail = () => {
   const [newReply, setNewReply] = useState("");
   const [loading, setLoading] = useState(true);
   const [replyLoading, setReplyLoading] = useState(false);
+  const [activeReplyId, setActiveReplyId] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = "Thread Details — AUTODEBATE";
@@ -138,6 +139,7 @@ const ForumDetail = () => {
       });
     } else {
       setNewReply("");
+      setActiveReplyId(null);
       await fetchReplies();
       toast({
         title: "Success",
@@ -145,6 +147,19 @@ const ForumDetail = () => {
       });
     }
     setReplyLoading(false);
+  };
+
+  const handleReplyClick = (replyId: string) => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to reply",
+        variant: "destructive",
+      });
+      return;
+    }
+    setActiveReplyId(replyId === activeReplyId ? null : replyId);
+    setNewReply("");
   };
 
   if (loading) {
@@ -280,11 +295,49 @@ const ForumDetail = () => {
                           <span className="font-semibold text-foreground">Anonymous</span>
                           <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">OP</span>
                         </div>
-                        <div className="prose prose-neutral dark:prose-invert max-w-none">
+                        <div className="prose prose-neutral dark:prose-invert max-w-none mb-4">
                           <div className="whitespace-pre-wrap text-foreground leading-relaxed">
                             {thread.content}
                           </div>
                         </div>
+                        <div className="flex items-center gap-3 pt-3 border-t border-border">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleReplyClick("thread")}
+                            className="text-muted-foreground hover:text-primary"
+                          >
+                            <MessageSquare className="h-4 w-4 mr-1" />
+                            Reply
+                          </Button>
+                        </div>
+                        {activeReplyId === "thread" && (
+                          <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                            <Textarea
+                              placeholder="Write your reply..."
+                              value={newReply}
+                              onChange={(e) => setNewReply(e.target.value)}
+                              rows={3}
+                              className="resize-none mb-3"
+                            />
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setActiveReplyId(null)}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                onClick={handleAddReply}
+                                disabled={replyLoading || !newReply.trim()}
+                                size="sm"
+                              >
+                                {replyLoading ? "Posting..." : "Post Reply"}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -298,53 +351,6 @@ const ForumDetail = () => {
                   </h2>
                 </div>
 
-                {/* Add Reply Form */}
-                {user ? (
-                  <Card className="bg-muted/30">
-                    <CardHeader>
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <MessageSquare className="h-5 w-5" />
-                        Reply to Thread
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <Textarea
-                        placeholder="Share your thoughts..."
-                        value={newReply}
-                        onChange={(e) => setNewReply(e.target.value)}
-                        rows={4}
-                        className="resize-none"
-                      />
-                      <div className="flex justify-end">
-                        <Button
-                          onClick={handleAddReply}
-                          disabled={replyLoading || !newReply.trim()}
-                          className="min-w-[120px]"
-                        >
-                          {replyLoading ? "Posting..." : "Post Reply"}
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Card className="border-primary/20 bg-primary/5">
-                    <CardContent className="pt-6">
-                      <div className="text-center">
-                        <MessageSquare className="h-12 w-12 text-primary mx-auto mb-3" />
-                        <p className="text-foreground font-medium mb-2">Join the Discussion</p>
-                        <p className="text-muted-foreground mb-4">
-                          Sign in to reply and engage with the community
-                        </p>
-                        <Button asChild>
-                          <a href="/auth">
-                            <UserIcon className="h-4 w-4 mr-2" />
-                            Sign In
-                          </a>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
 
                 {/* Replies List */}
                 <div className="space-y-4">
@@ -384,11 +390,49 @@ const ForumDetail = () => {
                                   })}
                                 </span>
                               </div>
-                              <div className="prose prose-neutral dark:prose-invert max-w-none">
+                              <div className="prose prose-neutral dark:prose-invert max-w-none mb-4">
                                 <p className="text-foreground leading-relaxed whitespace-pre-wrap m-0">
                                   {reply.content}
                                 </p>
                               </div>
+                              <div className="flex items-center gap-3 pt-3 border-t border-border">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleReplyClick(reply.id)}
+                                  className="text-muted-foreground hover:text-primary"
+                                >
+                                  <MessageSquare className="h-4 w-4 mr-1" />
+                                  Reply
+                                </Button>
+                              </div>
+                              {activeReplyId === reply.id && (
+                                <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                                  <Textarea
+                                    placeholder="Write your reply..."
+                                    value={newReply}
+                                    onChange={(e) => setNewReply(e.target.value)}
+                                    rows={3}
+                                    className="resize-none mb-3"
+                                  />
+                                  <div className="flex justify-end gap-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => setActiveReplyId(null)}
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      onClick={handleAddReply}
+                                      disabled={replyLoading || !newReply.trim()}
+                                      size="sm"
+                                    >
+                                      {replyLoading ? "Posting..." : "Post Reply"}
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </CardContent>
