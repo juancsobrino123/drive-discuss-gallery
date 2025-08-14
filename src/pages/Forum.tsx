@@ -130,7 +130,7 @@ const Forum = () => {
       .order("created_at", { ascending: false });
 
     // Apply category filter
-    if (selectedCategory) {
+    if (selectedCategory && selectedCategory !== "all") {
       query = query.eq("category_id", selectedCategory);
     }
 
@@ -195,7 +195,7 @@ const Forum = () => {
 
   // Update URL when category changes
   useEffect(() => {
-    if (selectedCategory) {
+    if (selectedCategory && selectedCategory !== "all") {
       setSearchParams({ category: selectedCategory });
     } else {
       setSearchParams({});
@@ -431,7 +431,7 @@ const Forum = () => {
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value="all">All Categories</SelectItem>
                     {categories.map((category) => {
                       const IconComponent = getIconComponent(category.icon);
                       return (
@@ -450,9 +450,9 @@ const Forum = () => {
               {/* Category Pills */}
               <div className="flex flex-wrap gap-2">
                 <Badge 
-                  variant={selectedCategory === "" ? "default" : "outline"}
+                  variant={selectedCategory === "" || selectedCategory === "all" ? "default" : "outline"}
                   className="cursor-pointer hover:bg-primary/10"
-                  onClick={() => setSelectedCategory("")}
+                  onClick={() => setSelectedCategory("all")}
                 >
                   All
                 </Badge>
