@@ -20,6 +20,7 @@ const Navbar = () => {
 
   const navItems = [
     { label: t('nav.home'), href: '/' },
+    { label: t('nav.debate'), href: '#' },
     { label: t('nav.gallery'), href: '/galeria' },
     { label: t('nav.events'), href: '/eventos' },
     { label: t('nav.about'), href: '/about' },
@@ -70,10 +71,10 @@ const Navbar = () => {
               </a>
             ))}
             
-            {/* News Dropdown */}
+            {/* Debate Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors duration-300 font-medium">
-                News <ChevronDown className="h-4 w-4" />
+                {t('nav.debate')} <ChevronDown className="h-4 w-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent className="bg-background border border-border">
                 <DropdownMenuItem asChild>
