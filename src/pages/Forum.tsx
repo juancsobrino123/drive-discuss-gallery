@@ -32,6 +32,7 @@ import {
   Settings
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 interface ForumCategory {
   id: string;
@@ -57,7 +58,7 @@ interface ForumThread {
 const Forum = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, canCreateEvent, isAdmin } = useAuth();
   const [threads, setThreads] = useState<ForumThread[]>([]);
   const [categories, setCategories] = useState<ForumCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,6 +69,13 @@ const Forum = () => {
   const [createLoading, setCreateLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>(searchParams.get("category") || "");
+  
+  // New category creation states
+  const [showNewCategoryForm, setShowNewCategoryForm] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryDescription, setNewCategoryDescription] = useState("");
+  const [newCategoryIcon, setNewCategoryIcon] = useState("MessageSquare");
+  const [newCategoryColor, setNewCategoryColor] = useState("#3b82f6");
 
   useEffect(() => {
     document.title = "Forum — AUTODEBATE";
@@ -87,18 +95,46 @@ const Forum = () => {
       "Únete a las discusiones del foro de AUTODEBATE. Comparte opiniones y participa en debates sobre el mundo automotriz."
     );
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-      }
-    );
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
+
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim() || !user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from("forum_categories")
+        .insert({
+          name: newCategoryName.trim(),
+          description: newCategoryDescription.trim() || null,
+          icon: newCategoryIcon,
+          color: newCategoryColor,
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      // Refresh categories and select the new one
+      await fetchCategories();
+      setNewThreadCategory(data.id);
+      setShowNewCategoryForm(false);
+      setNewCategoryName("");
+      setNewCategoryDescription("");
+      setNewCategoryIcon("MessageSquare");
+      setNewCategoryColor("#3b82f6");
+      toast({
+        title: "Success",
+        description: "Category created successfully",
+      });
+    } catch (error: any) {
+      console.error("Error creating category:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create category",
+        variant: "destructive",
+      });
+    }
+  };
 
   const fetchCategories = async () => {
     const { data, error } = await supabase
@@ -245,6 +281,9 @@ const Forum = () => {
       setNewThreadContent("");
       setNewThreadCategory("");
       setShowModal(false);
+      setShowNewCategoryForm(false);
+      setNewCategoryName("");
+      setNewCategoryDescription("");
       await fetchThreads();
       toast({
         title: "Success",
@@ -327,7 +366,14 @@ const Forum = () => {
                     <div className="space-y-4">
                       <div>
                         <Label htmlFor="thread-category">Category (Optional)</Label>
-                        <Select value={newThreadCategory} onValueChange={setNewThreadCategory}>
+                        <Select value={newThreadCategory} onValueChange={(value) => {
+                          if (value === "create_new") {
+                            setShowNewCategoryForm(true);
+                            setNewThreadCategory("");
+                          } else {
+                            setNewThreadCategory(value);
+                          }
+                        }}>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a category..." />
                           </SelectTrigger>
@@ -343,9 +389,91 @@ const Forum = () => {
                                 </SelectItem>
                               );
                             })}
+                            {(canCreateEvent || isAdmin) && (
+                              <SelectItem value="create_new">
+                                <div className="flex items-center gap-2 text-primary">
+                                  <Plus className="h-4 w-4" />
+                                  Create New Category
+                                </div>
+                              </SelectItem>
+                            )}
                           </SelectContent>
                         </Select>
                       </div>
+                      
+                      {showNewCategoryForm && (canCreateEvent || isAdmin) && (
+                        <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-medium">Create New Category</h4>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setShowNewCategoryForm(false);
+                                setNewCategoryName("");
+                                setNewCategoryDescription("");
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                          <div>
+                            <Label htmlFor="category-name">Category Name</Label>
+                            <Input
+                              id="category-name"
+                              placeholder="Enter category name..."
+                              value={newCategoryName}
+                              onChange={(e) => setNewCategoryName(e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="category-description">Description (Optional)</Label>
+                            <Input
+                              id="category-description"
+                              placeholder="Brief description..."
+                              value={newCategoryDescription}
+                              onChange={(e) => setNewCategoryDescription(e.target.value)}
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="category-icon">Icon</Label>
+                              <Select value={newCategoryIcon} onValueChange={setNewCategoryIcon}>
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="MessageSquare">💬 Chat</SelectItem>
+                                  <SelectItem value="Zap">⚡ Electric</SelectItem>
+                                  <SelectItem value="Car">🚗 Car</SelectItem>
+                                  <SelectItem value="Trophy">🏆 Racing</SelectItem>
+                                  <SelectItem value="Wrench">🔧 Tools</SelectItem>
+                                  <SelectItem value="Star">⭐ Premium</SelectItem>
+                                  <SelectItem value="Settings">⚙️ Tech</SelectItem>
+                                  <SelectItem value="Users">👥 Community</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <Label htmlFor="category-color">Color</Label>
+                              <Input
+                                id="category-color"
+                                type="color"
+                                value={newCategoryColor}
+                                onChange={(e) => setNewCategoryColor(e.target.value)}
+                                className="h-10"
+                              />
+                            </div>
+                          </div>
+                          <Button
+                            onClick={handleCreateCategory}
+                            disabled={!newCategoryName.trim()}
+                            className="w-full"
+                          >
+                            Create Category
+                          </Button>
+                        </div>
+                      )}
                       <div>
                         <Label htmlFor="thread-title">Title</Label>
                         <Input
