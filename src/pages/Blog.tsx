@@ -216,7 +216,7 @@ const Blog = () => {
         <div className="container mx-auto px-4 py-12">
           <header className="text-center mb-16">
             <div className="max-w-4xl mx-auto">
-              <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent mb-6">
+              <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent mb-6 font-brand">
                 AUTODEBATE
               </h1>
               <p className="text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-8">
@@ -413,7 +413,7 @@ const Blog = () => {
                           <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
                             <UserIcon className="h-3 w-3 text-primary" />
                           </div>
-                          <span className="font-medium">AUTODEBATE</span>
+                          <span className="font-medium font-brand">AUTODEBATE</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4" />

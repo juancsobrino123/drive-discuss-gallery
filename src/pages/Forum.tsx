@@ -302,7 +302,7 @@ const Forum = () => {
         <div className="bg-gradient-to-br from-primary/10 via-background to-secondary/10 border-b">
           <div className="container mx-auto px-4 py-16">
             <div className="max-w-4xl mx-auto text-center">
-              <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
+              <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 font-brand">
                 AUTODEBATE Forum
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">

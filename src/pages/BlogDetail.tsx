@@ -219,7 +219,7 @@ const BlogDetail = () => {
                 <div className="flex items-center gap-6 text-white/80">
                   <div className="flex items-center gap-2">
                     <UserIcon className="h-5 w-5" />
-                    <span className="font-medium">AUTODEBATE Team</span>
+                    <span className="font-medium font-brand">AUTODEBATE Team</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Calendar className="h-5 w-5" />
@@ -261,7 +261,7 @@ const BlogDetail = () => {
                 <div className="flex items-center gap-4 text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <UserIcon className="h-4 w-4" />
-                    <span>AUTODEBATE Team</span>
+                    <span className="font-brand">AUTODEBATE Team</span>
                   </div>
                   <span>•</span>
                   <time>

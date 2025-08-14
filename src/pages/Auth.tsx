@@ -99,7 +99,7 @@ const Auth = () => {
           <ArrowLeft className="h-4 w-4 mr-2" />
           {t('auth.back')}
         </Button>
-        <h1 className="sr-only">AUTODEBATE authentication</h1>
+        <h1 className="sr-only font-brand">AUTODEBATE authentication</h1>
       </header>
       <main className="container mx-auto px-4">
         <section className="max-w-md mx-auto bg-card border border-border rounded-lg p-6 shadow-sm">
