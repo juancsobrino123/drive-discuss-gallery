@@ -43,10 +43,13 @@ const ShareButton = ({
           text: description,
           url: fullUrl,
         });
+        return true; // Success
       } catch (error) {
-        console.log('Error sharing:', error);
+        console.log('Native share failed, falling back to menu:', error);
+        return false; // Failed, will show dropdown
       }
     }
+    return false; // Not available
   };
 
   const copyToClipboard = async () => {
@@ -82,23 +85,7 @@ const ShareButton = ({
     window.open(linkedinUrl, '_blank', 'width=600,height=400');
   };
 
-  // Check if native sharing is available
-  const hasNativeShare = typeof navigator !== 'undefined' && navigator.share;
-
-  if (hasNativeShare) {
-    return (
-      <Button
-        variant={variant}
-        size={size}
-        onClick={handleNativeShare}
-        className={`group ${className}`}
-      >
-        <Share className="h-4 w-4 mr-1" />
-        {size !== "sm" && t('blog.share')}
-      </Button>
-    );
-  }
-
+  // Always show dropdown instead of trying native share due to permission issues
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
