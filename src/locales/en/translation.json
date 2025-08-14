@@ -91,7 +91,8 @@
     "createPostButton": "Create Post",
     "noPosts": "No blog posts yet",
     "noPostsDesc": "Stay tuned for exciting automotive content!",
-    "createFirstPost": "Create First Post"
+    "createFirstPost": "Create First Post",
+    "viewAllArticles": "View All Articles"
   },
   "events": {
     "heading": "Automotive Events Calendar",

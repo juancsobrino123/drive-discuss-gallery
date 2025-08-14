@@ -91,7 +91,8 @@
     "createPostButton": "Crear publicación",
     "noPosts": "Aún no hay publicaciones",
     "noPostsDesc": "¡Mantente al tanto del emocionante contenido automotriz!",
-    "createFirstPost": "Crear primera publicación"
+    "createFirstPost": "Crear primera publicación",
+    "viewAllArticles": "Ver todos los artículos"
   },
   "events": {
     "heading": "Calendario de eventos automotrices",
