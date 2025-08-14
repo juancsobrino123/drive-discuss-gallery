@@ -398,71 +398,70 @@ const GallerySection = () => {
             {/* Event Galleries Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
               {events.map((event) => (
-                <Card 
+                <Link 
                   key={event.id}
-                  className={`p-6 hover:shadow-royal transition-all duration-300 transform hover:-translate-y-2 bg-gradient-card`}
+                  to={`/galeria/${event.id}`}
+                  className="block group"
                 >
-                  <div className="mb-3">
-                    <div className="grid grid-cols-2 gap-1 h-40">
-                      {(previewByEvent[event.id] || []).slice(0, 4).map((p) => (
-                        <img
-                          key={p.id}
-                          src={previewUrls[p.id] || galleryPreview}
-                          alt={p.caption || 'Miniatura de evento'}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
-                      ))}
-                      {(previewByEvent[event.id] || []).length < 4 && 
-                        Array.from({ length: 4 - (previewByEvent[event.id] || []).length }).map((_, idx) => (
-                          <div key={`empty-${idx}`} className="w-full h-full bg-muted/20 flex items-center justify-center">
-                            <span className="text-muted-foreground/50 text-xs">Sin fotos</span>
+                  <Card className={`p-6 hover:shadow-royal transition-all duration-300 transform group-hover:-translate-y-2 bg-gradient-card cursor-pointer`}>
+                    <div className="mb-4">
+                      <div className="grid grid-cols-2 gap-1 h-40 rounded-lg overflow-hidden">
+                        {(previewByEvent[event.id] || []).slice(0, 4).map((p) => (
+                          <div key={p.id} className="w-full h-full overflow-hidden">
+                            <img
+                              src={previewUrls[p.id] || galleryPreview}
+                              alt={p.caption || 'Miniatura de evento'}
+                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                              loading="lazy"
+                            />
                           </div>
-                        ))
-                      }
+                        ))}
+                        {(previewByEvent[event.id] || []).length < 4 && 
+                          Array.from({ length: 4 - (previewByEvent[event.id] || []).length }).map((_, idx) => (
+                            <div key={`empty-${idx}`} className="w-full h-full bg-muted/20 flex items-center justify-center rounded">
+                              <span className="text-muted-foreground/50 text-xs">Sin fotos</span>
+                            </div>
+                          ))
+                        }
+                      </div>
                     </div>
-                  </div>
-                  
-                  <h3 className="font-semibold text-foreground mb-2 truncate">
-                    {event.title}
-                  </h3>
-                  
-                  <div className="text-sm text-muted-foreground mb-3">
-                    <div className="flex items-center mb-1">
-                      <Calendar className="w-4 h-4 mr-1" />
-                      <span>{event.event_date || 'Fecha por definir'}</span>
+                    
+                    <h3 className="font-semibold text-foreground mb-2 truncate group-hover:text-primary transition-colors">
+                      {event.title}
+                    </h3>
+                    
+                    <div className="text-sm text-muted-foreground mb-4">
+                      <div className="flex items-center mb-1">
+                        <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
+                        <span className="truncate">{event.event_date || 'Fecha por definir'}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
+                        <span className="truncate">{event.location || 'Ubicación por definir'}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      <span className="truncate">{event.location || 'Ubicación por definir'}</span>
-                    </div>
-                  </div>
 
-                  <div className="flex gap-2">
-                    <Link to={`/galeria/${event.id}`} className="flex-1">
-                      <Button variant="outline" size="sm" className="w-full">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center text-primary group-hover:text-primary-foreground transition-colors">
                         <Eye className="w-4 h-4 mr-2" />
-                        Ver
-                      </Button>
-                    </Link>
-                    {canUpload && (
-                      <label className="flex-1">
-                        <input 
-                          type="file" 
-                          className="hidden" 
-                          multiple 
-                          onChange={(e) => handleUpload(event.id, e.target.files)} 
-                        />
-                        <Button variant="secondary" size="sm" asChild className="w-full">
-                          <span>
-                            <Upload className="w-4 h-4 mr-2" />
-                            Subir
-                          </span>
-                        </Button>
-                      </label>
-                    )}
-                  </div>
-                </Card>
+                        <span className="text-sm font-medium">Ver galería</span>
+                      </div>
+                      {canUpload && (
+                        <div className="relative" onClick={(e) => e.preventDefault()}>
+                          <input 
+                            type="file" 
+                            className="absolute inset-0 opacity-0 cursor-pointer" 
+                            multiple 
+                            onChange={(e) => handleUpload(event.id, e.target.files)} 
+                          />
+                          <Button variant="secondary" size="sm" className="pointer-events-none">
+                            <Upload className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                </Link>
               ))}
             </div>
           </>
