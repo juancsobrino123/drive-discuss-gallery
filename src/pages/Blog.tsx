@@ -215,7 +215,7 @@ const Blog = () => {
           <header className="text-center mb-16">
             <div className="max-w-4xl mx-auto">
               <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent mb-6">
-                Blog AUTODEBATE
+                AUTODEBATE
               </h1>
               <p className="text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-8">
                 Descubre las últimas tendencias, análisis profundos y historias fascinantes del mundo automotriz
