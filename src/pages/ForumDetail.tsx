@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, MessageSquare, User as UserIcon, Pin, Heart, Reply } from "lucide-react";
+import { ArrowLeft, MessageSquare, User as UserIcon, Pin, Heart, Reply, Car, Zap, Trophy, Wrench, Star, Settings, Users, Tag } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface ForumThread {
@@ -18,8 +18,16 @@ interface ForumThread {
   author_id: string;
   created_at: string;
   pinned: boolean;
+  category_id?: string | null;
   profiles?: {
     username: string | null;
+  } | null;
+  forum_categories?: {
+    id: string;
+    name: string;
+    icon: string;
+    color: string;
+    description?: string;
   } | null;
 }
 
@@ -76,7 +84,16 @@ const ForumDetail = () => {
     
     const { data, error } = await supabase
       .from("forum_threads")
-      .select("*")
+      .select(`
+        *,
+        forum_categories (
+          id,
+          name,
+          icon,
+          color,
+          description
+        )
+      `)
       .eq("id", threadId)
       .single();
 
@@ -256,6 +273,20 @@ const ForumDetail = () => {
     return replies.find(r => r.id === parentId);
   };
 
+  const getIconComponent = (iconName: string) => {
+    const icons: { [key: string]: any } = {
+      MessageSquare,
+      Car,
+      Zap,
+      Trophy,
+      Wrench,
+      Star,
+      Settings,
+      Users,
+    };
+    return icons[iconName] || MessageSquare;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -353,6 +384,17 @@ const ForumDetail = () => {
                 </h1>
                 
                 <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
+                  {thread.forum_categories && (
+                    <div className="flex items-center gap-2 bg-background/50 rounded-full px-3 py-1">
+                      {(() => {
+                        const IconComponent = getIconComponent(thread.forum_categories.icon);
+                        return <IconComponent className="h-4 w-4" style={{ color: thread.forum_categories.color }} />;
+                      })()}
+                      <span className="font-medium" style={{ color: thread.forum_categories.color }}>
+                        {thread.forum_categories.name}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 bg-background/50 rounded-full px-3 py-1">
                     <UserIcon className="h-4 w-4" />
                     <span className="font-medium">Anonymous</span>
