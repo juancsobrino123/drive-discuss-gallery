@@ -442,7 +442,7 @@ const GallerySection = () => {
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center text-primary group-hover:text-primary-foreground transition-colors">
+                      <div className="flex items-center text-primary transition-colors">
                         <Eye className="w-4 h-4 mr-2" />
                         <span className="text-sm font-medium">Ver galería</span>
                       </div>
