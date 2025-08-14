@@ -10,8 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { BookOpen, Plus, User as UserIcon, Calendar } from "lucide-react";
+import { BookOpen, Plus, User as UserIcon, Calendar, Upload, X, Image as ImageIcon } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 interface BlogPost {
   id: string;
@@ -21,6 +22,7 @@ interface BlogPost {
   author_id: string;
   created_at: string;
   published: boolean;
+  featured_image?: string | null;
   profiles?: {
     username: string | null;
   } | null;
@@ -38,8 +40,7 @@ const setMeta = (name: string, content: string) => {
 
 const Blog = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const { user, isAdmin } = useAuth();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -48,6 +49,8 @@ const Blog = () => {
   const [newPostExcerpt, setNewPostExcerpt] = useState("");
   const [newPostPublished, setNewPostPublished] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = "Blog de AUTODEBATE — Noticias y artículos";
@@ -60,37 +63,7 @@ const Blog = () => {
       Object.assign(document.createElement("link"), { rel: "canonical" });
     link.href = window.location.origin + "/blog";
     if (!link.parentElement) document.head.appendChild(link);
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          checkUserRole(session.user.id);
-        } else {
-          setUserRole(null);
-        }
-      }
-    );
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        checkUserRole(session.user.id);
-      }
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
-
-  const checkUserRole = async (userId: string) => {
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .single();
-    
-    setUserRole(data?.role || null);
-  };
 
   const fetchPosts = async () => {
     const { data, error } = await supabase
@@ -122,8 +95,43 @@ const Blog = () => {
     loadData();
   }, []);
 
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+  };
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    const fileName = `${Date.now()}-${file.name}`;
+    const { data, error } = await supabase.storage
+      .from('blog-images')
+      .upload(fileName, file);
+
+    if (error) {
+      console.error('Error uploading image:', error);
+      return null;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('blog-images')
+      .getPublicUrl(fileName);
+
+    return publicUrl;
+  };
+
   const handleCreatePost = async () => {
-    if (!user || userRole !== "admin") {
+    if (!user || !isAdmin) {
       toast({
         title: "Access denied",
         description: "Only admins can create blog posts",
@@ -142,6 +150,21 @@ const Blog = () => {
     }
 
     setCreateLoading(true);
+    
+    let featuredImageUrl = null;
+    if (selectedImage) {
+      featuredImageUrl = await uploadImage(selectedImage);
+      if (!featuredImageUrl) {
+        toast({
+          title: "Error",
+          description: "Failed to upload image",
+          variant: "destructive",
+        });
+        setCreateLoading(false);
+        return;
+      }
+    }
+
     const { error } = await supabase
       .from("blog_posts")
       .insert({
@@ -150,6 +173,7 @@ const Blog = () => {
         excerpt: newPostExcerpt.trim(),
         published: newPostPublished,
         author_id: user.id,
+        featured_image: featuredImageUrl,
       });
 
     if (error) {
@@ -164,6 +188,8 @@ const Blog = () => {
       setNewPostContent("");
       setNewPostExcerpt("");
       setNewPostPublished(false);
+      setSelectedImage(null);
+      setImagePreview(null);
       setCreateDialogOpen(false);
       await fetchPosts();
       toast({
@@ -185,31 +211,30 @@ const Blog = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="pt-16">
-        <div className="container mx-auto px-4 py-10">
-          <header className="mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-4xl md:text-5xl font-bold text-foreground">
-                  Blog de AUTODEBATE
-                </h1>
-                <p className="text-muted-foreground mt-3 max-w-2xl">
-                  Artículos, opiniones y tendencias del mundo automotriz.
-                </p>
-              </div>
+        <div className="container mx-auto px-4 py-12">
+          <header className="text-center mb-16">
+            <div className="max-w-4xl mx-auto">
+              <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent mb-6">
+                Blog AUTODEBATE
+              </h1>
+              <p className="text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-8">
+                Descubre las últimas tendencias, análisis profundos y historias fascinantes del mundo automotriz
+              </p>
               
-              {userRole === "admin" && (
-                <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+              {isAdmin && (
+                <div className="flex justify-center">
+                  <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
                   <DialogTrigger asChild>
                     <Button className="flex items-center gap-2">
                       <Plus className="h-4 w-4" />
                       New Post
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[600px]">
+                  <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>Create New Blog Post</DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                       <div>
                         <Label htmlFor="post-title">Title</Label>
                         <Input
@@ -219,6 +244,50 @@ const Blog = () => {
                           onChange={(e) => setNewPostTitle(e.target.value)}
                         />
                       </div>
+                      
+                      <div>
+                        <Label htmlFor="post-image">Featured Image (Optional)</Label>
+                        <div className="mt-2">
+                          {imagePreview ? (
+                            <div className="relative">
+                              <img
+                                src={imagePreview}
+                                alt="Preview"
+                                className="w-full h-48 object-cover rounded-lg border"
+                              />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                className="absolute top-2 right-2"
+                                onClick={handleRemoveImage}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
+                              <ImageIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                              <div className="space-y-2">
+                                <p className="text-sm text-muted-foreground">
+                                  Click to upload or drag and drop
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  PNG, JPG, WebP up to 10MB
+                                </p>
+                              </div>
+                              <Input
+                                id="post-image"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageSelect}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
                       <div>
                         <Label htmlFor="post-excerpt">Excerpt</Label>
                         <Textarea
@@ -250,7 +319,11 @@ const Blog = () => {
                       <div className="flex gap-2 justify-end">
                         <Button
                           variant="outline"
-                          onClick={() => setCreateDialogOpen(false)}
+                          onClick={() => {
+                            setCreateDialogOpen(false);
+                            setSelectedImage(null);
+                            setImagePreview(null);
+                          }}
                         >
                           Cancel
                         </Button>
@@ -264,6 +337,7 @@ const Blog = () => {
                     </div>
                   </DialogContent>
                 </Dialog>
+                </div>
               )}
             </div>
           </header>
@@ -295,7 +369,7 @@ const Blog = () => {
                     <p className="text-muted-foreground mb-4">
                       Stay tuned for exciting automotive content!
                     </p>
-                    {userRole === "admin" && (
+                    {isAdmin && (
                       <Button onClick={() => setCreateDialogOpen(true)}>
                         Create First Post
                       </Button>
@@ -304,24 +378,40 @@ const Blog = () => {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                 {posts.map((post) => (
                   <Card
                     key={post.id}
-                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    className="group cursor-pointer hover:shadow-xl transition-all duration-300 overflow-hidden border-0 bg-gradient-to-br from-card/50 to-card hover:from-card to-card/80"
                     onClick={() => navigate(`/blog/${post.id}`)}
                   >
-                    <CardHeader>
-                      <CardTitle className="line-clamp-2">{post.title}</CardTitle>
+                    {post.featured_image && (
+                      <div className="relative h-48 overflow-hidden">
+                        <img
+                          src={post.featured_image}
+                          alt={post.title}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                      </div>
+                    )}
+                    <CardHeader className={post.featured_image ? "relative -mt-16 z-10" : ""}>
+                      <CardTitle className={`line-clamp-2 transition-colors group-hover:text-primary ${
+                        post.featured_image ? "text-white" : ""
+                      }`}>
+                        {post.title}
+                      </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <p className="text-muted-foreground mb-4 line-clamp-3">
+                    <CardContent className="space-y-4">
+                      <p className="text-muted-foreground line-clamp-3 leading-relaxed">
                         {post.excerpt}
                       </p>
-                      <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <div className="flex items-center justify-between text-sm text-muted-foreground pt-4 border-t border-border/50">
                         <div className="flex items-center gap-2">
-                          <UserIcon className="h-4 w-4" />
-                          <span>AUTODEBATE Team</span>
+                          <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+                            <UserIcon className="h-3 w-3 text-primary" />
+                          </div>
+                          <span className="font-medium">AUTODEBATE</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4" />

@@ -7,8 +7,9 @@ import Footer from "@/components/ui/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, MessageCircle, User as UserIcon } from "lucide-react";
+import { ArrowLeft, MessageCircle, User as UserIcon, Calendar, Clock } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 interface BlogPost {
   id: string;
@@ -18,6 +19,7 @@ interface BlogPost {
   author_id: string;
   created_at: string;
   published: boolean;
+  featured_image?: string | null;
   profiles?: {
     username: string | null;
   } | null;
@@ -36,7 +38,7 @@ interface Comment {
 const BlogDetail = () => {
   const { postId } = useParams<{ postId: string }>();
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
+  const { user } = useAuth();
   const [post, setPost] = useState<BlogPost | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
@@ -45,18 +47,6 @@ const BlogDetail = () => {
 
   useEffect(() => {
     document.title = "Post Details — AUTODEBATE";
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-      }
-    );
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
 
   const fetchPost = async () => {
@@ -203,41 +193,91 @@ const BlogDetail = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="pt-16">
-        <div className="container mx-auto px-4 py-10">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate("/blog")}
-            className="mb-6"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Blog
-          </Button>
+        {/* Hero Section with Featured Image */}
+        {post?.featured_image && (
+          <div className="relative h-96 md:h-[500px] overflow-hidden">
+            <img
+              src={post.featured_image}
+              alt={post.title}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-8">
+              <div className="container mx-auto max-w-4xl">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => navigate("/blog")}
+                  className="mb-6 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white border-white/20"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Blog
+                </Button>
+                <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 leading-tight">
+                  {post.title}
+                </h1>
+                <div className="flex items-center gap-6 text-white/80">
+                  <div className="flex items-center gap-2">
+                    <UserIcon className="h-5 w-5" />
+                    <span className="font-medium">AUTODEBATE Team</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    <time>
+                      {new Date(post.created_at).toLocaleDateString("es-ES", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </time>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="container mx-auto px-4 py-8">
+          {/* Back Button for posts without featured image */}
+          {!post?.featured_image && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/blog")}
+              className="mb-6"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Blog
+            </Button>
+          )}
 
           <article className="max-w-4xl mx-auto">
-            <header className="mb-8">
-              <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-                {post.title}
-              </h1>
-              <div className="flex items-center gap-4 text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <UserIcon className="h-4 w-4" />
-                  <span>AUTODEBATE Team</span>
+            {/* Header for posts without featured image */}
+            {!post?.featured_image && (
+              <header className="mb-8">
+                <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+                  {post?.title}
+                </h1>
+                <div className="flex items-center gap-4 text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <UserIcon className="h-4 w-4" />
+                    <span>AUTODEBATE Team</span>
+                  </div>
+                  <span>•</span>
+                  <time>
+                    {post && new Date(post.created_at).toLocaleDateString("es-ES", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </time>
                 </div>
-                <span>•</span>
-                <time>
-                  {new Date(post.created_at).toLocaleDateString("es-ES", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </time>
-              </div>
-            </header>
+              </header>
+            )}
 
-            <div className="prose prose-lg max-w-none mb-12">
-              <div className="whitespace-pre-wrap text-foreground leading-relaxed">
-                {post.content}
+            <div className="prose prose-lg max-w-none mb-12 text-foreground">
+              <div className="whitespace-pre-wrap leading-relaxed text-lg">
+                {post?.content}
               </div>
             </div>
 
