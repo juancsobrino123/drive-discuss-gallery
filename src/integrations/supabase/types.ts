@@ -121,6 +121,8 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          likes_count: number
+          parent_reply_id: string | null
           thread_id: string
           updated_at: string
         }
@@ -129,6 +131,8 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          likes_count?: number
+          parent_reply_id?: string | null
           thread_id: string
           updated_at?: string
         }
@@ -137,15 +141,53 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          likes_count?: number
+          parent_reply_id?: string | null
           thread_id?: string
           updated_at?: string
         }
         Relationships: [
           {
+            foreignKeyName: "forum_replies_parent_reply_id_fkey"
+            columns: ["parent_reply_id"]
+            isOneToOne: false
+            referencedRelation: "forum_replies"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "forum_replies_thread_id_fkey"
             columns: ["thread_id"]
             isOneToOne: false
             referencedRelation: "forum_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_reply_likes: {
+        Row: {
+          created_at: string
+          id: string
+          reply_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reply_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reply_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_reply_likes_reply_id_fkey"
+            columns: ["reply_id"]
+            isOneToOne: false
+            referencedRelation: "forum_replies"
             referencedColumns: ["id"]
           },
         ]
