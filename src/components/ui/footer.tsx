@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import { 
   Mail,
   MapPin,
@@ -19,11 +20,12 @@ const Footer = () => {
   ];
 
   const quickLinks = [
-    { key: "gallery", href: "#gallery" },
-    { key: "blog", href: "#blog" },
-    { key: "events", href: "#events" },
-    { key: "about", href: "#about" },
-    { key: "contact", href: "#contact" }
+    { key: "home", href: "/" },
+    { key: "gallery", href: "/galeria" },
+    { key: "blog", href: "/blog" },
+    { key: "events", href: "/eventos" },
+    { key: "forum", href: "/forum" },
+    { key: "about", href: "/about" }
   ];
 
   const legalLinks = [
@@ -78,12 +80,12 @@ const Footer = () => {
             <ul className="space-y-3">
               {quickLinks.map((link) => (
                 <li key={link.key}>
-                  <a 
-                    href={link.href}
+                  <Link 
+                    to={link.href}
                     className="text-gray-300 hover:text-primary transition-colors duration-300"
                   >
                     {t(`nav.${link.key}`)}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
