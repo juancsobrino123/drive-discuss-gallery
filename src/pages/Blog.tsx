@@ -14,6 +14,7 @@ import { BookOpen, Plus, User as UserIcon, Calendar, Upload, X, Image as ImageIc
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
+import ShareButton from "@/components/ui/share-button";
 
 interface BlogPost {
   id: string;
@@ -415,15 +416,25 @@ const Blog = () => {
                           </div>
                           <span className="font-medium font-brand">AUTODEBATE</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          <time>
-                            {new Date(post.created_at).toLocaleDateString("es-ES", {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            })}
-                          </time>
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4" />
+                            <time>
+                              {new Date(post.created_at).toLocaleDateString("es-ES", {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              })}
+                            </time>
+                          </div>
+                          <ShareButton
+                            url={`/blog/${post.id}`}
+                            title={post.title}
+                            description={post.excerpt}
+                            variant="ghost"
+                            size="sm"
+                            className="text-muted-foreground hover:text-primary"
+                          />
                         </div>
                       </div>
                     </CardContent>

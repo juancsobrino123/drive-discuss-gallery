@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, MessageCircle, User as UserIcon, Calendar, Clock } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import ShareButton from "@/components/ui/share-button";
 
 interface BlogPost {
   id: string;
@@ -275,9 +276,23 @@ const BlogDetail = () => {
               </header>
             )}
 
-            <div className="prose prose-lg max-w-none mb-12 text-foreground">
+            <div className="prose prose-lg max-w-none mb-8 text-foreground">
               <div className="whitespace-pre-wrap leading-relaxed text-lg">
                 {post?.content}
+              </div>
+            </div>
+
+            {/* Share Section */}
+            <div className="flex items-center justify-center mb-12">
+              <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
+                <span className="text-muted-foreground font-medium">Compartir artículo:</span>
+                <ShareButton
+                  url={`/blog/${post?.id}`}
+                  title={post?.title || ""}
+                  description={post?.excerpt || ""}
+                  variant="hero"
+                  size="default"
+                />
               </div>
             </div>
 

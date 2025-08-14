@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, BookOpen, Calendar, User as UserIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import ShareButton from "@/components/ui/share-button";
 
 interface BlogPost {
   id: string;
@@ -119,15 +120,25 @@ const BlogPreview = () => {
                       </div>
                       <span className="font-medium font-brand">AUTODEBATE</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      <time>
-                        {new Date(post.created_at).toLocaleDateString("es-ES", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </time>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        <time>
+                          {new Date(post.created_at).toLocaleDateString("es-ES", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </time>
+                      </div>
+                      <ShareButton
+                        url={`/blog/${post.id}`}
+                        title={post.title}
+                        description={post.excerpt}
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground hover:text-primary"
+                      />
                     </div>
                   </div>
                 </CardContent>
