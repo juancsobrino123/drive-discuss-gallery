@@ -7,7 +7,8 @@ import Footer from "@/components/ui/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, MessageSquare, User as UserIcon, Pin } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, MessageSquare, User as UserIcon, Pin, Heart, Reply } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface ForumThread {
@@ -27,9 +28,17 @@ interface ForumReply {
   content: string;
   created_at: string;
   author_id: string;
+  parent_reply_id?: string | null;
+  likes_count: number;
   profiles?: {
     username: string | null;
   } | null;
+}
+
+interface ReplyLike {
+  id: string;
+  reply_id: string;
+  user_id: string;
 }
 
 const ForumDetail = () => {
@@ -38,10 +47,13 @@ const ForumDetail = () => {
   const [user, setUser] = useState<User | null>(null);
   const [thread, setThread] = useState<ForumThread | null>(null);
   const [replies, setReplies] = useState<ForumReply[]>([]);
+  const [userLikes, setUserLikes] = useState<Set<string>>(new Set());
   const [newReply, setNewReply] = useState("");
   const [loading, setLoading] = useState(true);
   const [replyLoading, setReplyLoading] = useState(false);
   const [activeReplyId, setActiveReplyId] = useState<string | null>(null);
+  const [parentReplyId, setParentReplyId] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "likes">("newest");
 
   useEffect(() => {
     document.title = "Thread Details — AUTODEBATE";
@@ -85,11 +97,19 @@ const ForumDetail = () => {
   const fetchReplies = async () => {
     if (!threadId) return;
     
+    let orderBy = "created_at";
+    let ascending = sortBy === "newest" ? false : true;
+    
+    if (sortBy === "likes") {
+      orderBy = "likes_count";
+      ascending = false;
+    }
+    
     const { data, error } = await supabase
       .from("forum_replies")
       .select("*")
       .eq("thread_id", threadId)
-      .order("created_at", { ascending: true });
+      .order(orderBy, { ascending });
 
     if (error) {
       console.error("Error fetching replies:", error);
@@ -99,15 +119,37 @@ const ForumDetail = () => {
     setReplies(data || []);
   };
 
+  const fetchUserLikes = async () => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from("forum_reply_likes")
+      .select("reply_id")
+      .eq("user_id", user.id);
+
+    if (error) {
+      console.error("Error fetching user likes:", error);
+      return;
+    }
+
+    setUserLikes(new Set(data.map(like => like.reply_id)));
+  };
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([fetchThread(), fetchReplies()]);
+      await Promise.all([fetchThread(), fetchReplies(), fetchUserLikes()]);
       setLoading(false);
     };
 
     loadData();
-  }, [threadId]);
+  }, [threadId, sortBy]);
+
+  useEffect(() => {
+    if (user) {
+      fetchUserLikes();
+    }
+  }, [user]);
 
   const handleAddReply = async () => {
     if (!user) {
@@ -128,6 +170,7 @@ const ForumDetail = () => {
         thread_id: threadId,
         content: newReply.trim(),
         author_id: user.id,
+        parent_reply_id: parentReplyId,
       });
 
     if (error) {
@@ -140,6 +183,7 @@ const ForumDetail = () => {
     } else {
       setNewReply("");
       setActiveReplyId(null);
+      setParentReplyId(null);
       await fetchReplies();
       toast({
         title: "Success",
@@ -149,7 +193,7 @@ const ForumDetail = () => {
     setReplyLoading(false);
   };
 
-  const handleReplyClick = (replyId: string) => {
+  const handleReplyClick = (replyId: string, parentId?: string) => {
     if (!user) {
       toast({
         title: "Authentication required",
@@ -159,7 +203,57 @@ const ForumDetail = () => {
       return;
     }
     setActiveReplyId(replyId === activeReplyId ? null : replyId);
+    setParentReplyId(parentId || null);
     setNewReply("");
+  };
+
+  const handleLike = async (replyId: string) => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to like",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const isLiked = userLikes.has(replyId);
+    
+    if (isLiked) {
+      // Unlike
+      const { error } = await supabase
+        .from("forum_reply_likes")
+        .delete()
+        .eq("reply_id", replyId)
+        .eq("user_id", user.id);
+
+      if (!error) {
+        setUserLikes(prev => {
+          const newLikes = new Set(prev);
+          newLikes.delete(replyId);
+          return newLikes;
+        });
+        await fetchReplies();
+      }
+    } else {
+      // Like
+      const { error } = await supabase
+        .from("forum_reply_likes")
+        .insert({
+          reply_id: replyId,
+          user_id: user.id,
+        });
+
+      if (!error) {
+        setUserLikes(prev => new Set([...prev, replyId]));
+        await fetchReplies();
+      }
+    }
+  };
+
+  const getParentReply = (parentId: string | null) => {
+    if (!parentId) return null;
+    return replies.find(r => r.id === parentId);
   };
 
   if (loading) {
@@ -343,12 +437,25 @@ const ForumDetail = () => {
                   </CardContent>
                 </Card>
 
-                {/* Replies Header */}
-                <div className="flex items-center justify-between">
+                {/* Replies Header with Sort */}
+                <div className="flex items-center justify-between flex-wrap gap-4">
                   <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
                     <MessageSquare className="h-6 w-6" />
                     Replies ({replies.length})
                   </h2>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Sort by:</span>
+                    <Select value={sortBy} onValueChange={(value: "newest" | "oldest" | "likes") => setSortBy(value)}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="newest">Newest</SelectItem>
+                        <SelectItem value="oldest">Oldest</SelectItem>
+                        <SelectItem value="likes">Most Liked</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
 
@@ -390,6 +497,17 @@ const ForumDetail = () => {
                                   })}
                                 </span>
                               </div>
+                              {reply.parent_reply_id && (
+                                <div className="mb-3 p-3 bg-muted/20 border-l-2 border-primary/30 rounded-r-lg">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Reply className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-sm text-muted-foreground">Replying to:</span>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground italic truncate">
+                                    {getParentReply(reply.parent_reply_id)?.content || "Original thread"}
+                                  </p>
+                                </div>
+                              )}
                               <div className="prose prose-neutral dark:prose-invert max-w-none mb-4">
                                 <p className="text-foreground leading-relaxed whitespace-pre-wrap m-0">
                                   {reply.content}
@@ -399,7 +517,22 @@ const ForumDetail = () => {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => handleReplyClick(reply.id)}
+                                  onClick={() => handleLike(reply.id)}
+                                  className={`text-muted-foreground hover:text-primary ${
+                                    userLikes.has(reply.id) ? "text-primary" : ""
+                                  }`}
+                                >
+                                  <Heart 
+                                    className={`h-4 w-4 mr-1 ${
+                                      userLikes.has(reply.id) ? "fill-current" : ""
+                                    }`} 
+                                  />
+                                  {reply.likes_count || 0}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleReplyClick(reply.id, reply.id)}
                                   className="text-muted-foreground hover:text-primary"
                                 >
                                   <MessageSquare className="h-4 w-4 mr-1" />
