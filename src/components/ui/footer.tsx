@@ -1,26 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { 
-  Youtube, 
-  Instagram, 
-  Facebook, 
-  Twitter, 
-  Play,
-  MessageSquare,
   Mail,
   MapPin,
   Calendar
 } from "lucide-react";
+import { SiYoutube, SiInstagram, SiTiktok, SiKick, SiFacebook, SiX } from "react-icons/si";
 import { useTranslation } from "react-i18next";
 
 const Footer = () => {
   const { t } = useTranslation();
   const socialLinks = [
-    { icon: Youtube, label: "YouTube", url: "https://youtube.com/@autodebate", color: "hover:text-red-500" },
-    { icon: Instagram, label: "Instagram", url: "https://instagram.com/autodebate", color: "hover:text-pink-500" },
-    { icon: Play, label: "TikTok", url: "https://tiktok.com/@autodebate", color: "hover:text-gray-800" },
-    { icon: MessageSquare, label: "Kick", url: "https://kick.com/autodebate", color: "hover:text-green-500" },
-    { icon: Facebook, label: "Facebook", url: "https://facebook.com/autodebate", color: "hover:text-blue-600" },
-    { icon: Twitter, label: "X", url: "https://x.com/autodebate", color: "hover:text-gray-900" }
+    { icon: SiYoutube, label: "YouTube", url: "https://youtube.com/@autodebate", color: "hover:text-red-500" },
+    { icon: SiInstagram, label: "Instagram", url: "https://instagram.com/autodebate", color: "hover:text-pink-500" },
+    { icon: SiTiktok, label: "TikTok", url: "https://tiktok.com/@autodebate", color: "hover:text-gray-800" },
+    { icon: SiKick, label: "Kick", url: "https://kick.com/autodebate", color: "hover:text-green-500" },
+    { icon: SiFacebook, label: "Facebook", url: "https://facebook.com/autodebate", color: "hover:text-blue-600" },
+    { icon: SiX, label: "X", url: "https://x.com/autodebate", color: "hover:text-gray-900" }
   ];
 
   const quickLinks = [

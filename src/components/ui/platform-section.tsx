@@ -1,8 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ExternalLink, Calendar } from "lucide-react";
-import { SiYoutube, SiInstagram, SiTiktok, SiFacebook, SiX } from "react-icons/si";
-import { Zap } from "lucide-react";
+import { SiYoutube, SiInstagram, SiTiktok, SiKick, SiFacebook, SiX } from "react-icons/si";
 import { useTranslation } from "react-i18next";
 
 const PlatformSection = () => {
@@ -34,16 +33,16 @@ const PlatformSection = () => {
       stats: "3K+ followers",
       icon: SiTiktok,
       url: "https://tiktok.com/@autodebate",
-      color: "from-black to-pink-500"
+      color: "from-black to-gray-800"
     },
     {
       name: "Kick",
       username: "@autodebate",
       description: "Live automotive discussions and streams",
       stats: "1K+ followers",
-      icon: Zap,
+      icon: SiKick,
       url: "https://kick.com/autodebate",
-      color: "from-green-400 to-green-600"
+      color: "from-green-500 to-green-600"
     },
     {
       name: "Facebook",
@@ -61,7 +60,7 @@ const PlatformSection = () => {
       stats: "12K+ followers",
       icon: SiX,
       url: "https://x.com/autodebate",
-      color: "from-blue-400 to-blue-600"
+      color: "from-gray-900 to-black"
     }
   ];
 
