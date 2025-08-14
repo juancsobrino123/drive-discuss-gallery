@@ -159,7 +159,7 @@ const About = () => {
                 </Button>
               </div>
               <p className="text-sm text-muted-foreground mt-6">
-                Escríbenos a: <span className="text-primary font-medium">trabajo@autodebate.com</span>
+                Escríbenos a: <span className="text-primary font-medium">autodebate@gmail.com</span>
               </p>
             </div>
           </div>
@@ -177,7 +177,7 @@ const About = () => {
                   </p>
                   <Button variant="outline" size="lg" className="border-primary/50 hover:bg-primary/10">
                     <Mail className="w-5 h-5 mr-2" />
-                    contacto@autodebate.com
+                    autodebate@gmail.com
                   </Button>
                 </CardContent>
               </Card>
