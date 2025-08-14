@@ -6,9 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,7 +19,7 @@ const Auth = () => {
 
   useEffect(() => {
     // Basic SEO tags
-    const title = mode === "signin" ? "Login | AUTODEBATE" : "Sign up | AUTODEBATE";
+    const title = mode === "signin" ? t('auth.loginTitle') : t('auth.signupTitle');
     document.title = title;
 
     let meta = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
@@ -28,9 +30,7 @@ const Auth = () => {
     }
     meta.setAttribute(
       "content",
-      mode === "signin"
-        ? "Log in to your AUTODEBATE account to access the community and events."
-        : "Create your AUTODEBATE account to join the community and events."
+      mode === "signin" ? t('auth.loginDescription') : t('auth.signupDescription')
     );
 
     // Canonical
@@ -42,7 +42,7 @@ const Auth = () => {
       document.head.appendChild(canonical);
     }
     canonical.setAttribute("href", canonicalHref);
-  }, [mode]);
+  }, [mode, t]);
 
   useEffect(() => {
     // Redirect if already authenticated
@@ -97,26 +97,26 @@ const Auth = () => {
           className="mb-4"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Volver
+          {t('auth.back')}
         </Button>
         <h1 className="sr-only">AUTODEBATE authentication</h1>
       </header>
       <main className="container mx-auto px-4">
         <section className="max-w-md mx-auto bg-card border border-border rounded-lg p-6 shadow-sm">
           <h2 className="text-2xl font-bold mb-1">
-            {mode === "signin" ? "Log in to AUTODEBATE" : "Create your AUTODEBATE account"}
+            {mode === "signin" ? t('auth.loginHeading') : t('auth.signupHeading')}
           </h2>
           <p className="text-muted-foreground mb-6">
-            {mode === "signin" ? "Enter your credentials to continue." : "Sign up with your email and a password."}
+            {mode === "signin" ? t('auth.loginSubtitle') : t('auth.signupSubtitle')}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('auth.email')}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder={t('auth.emailPlaceholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
@@ -124,12 +124,12 @@ const Auth = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('auth.password')}</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
+                  placeholder={t('auth.passwordPlaceholder')}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete={mode === "signin" ? "current-password" : "new-password"}
@@ -153,16 +153,16 @@ const Auth = () => {
             </div>
 
             <Button type="submit" className="w-full" variant="hero" disabled={loading}>
-              {loading ? (mode === "signin" ? "Signing in..." : "Creating account...") : mode === "signin" ? "Sign in" : "Sign up"}
+              {loading ? (mode === "signin" ? t('auth.signingIn') : t('auth.creatingAccount')) : mode === "signin" ? t('auth.signIn') : t('auth.signUp')}
             </Button>
           </form>
 
           <div className="flex items-center justify-between mt-4 text-sm">
             <span className="text-muted-foreground">
-              {mode === "signin" ? "Don't have an account?" : "Already have an account?"}
+              {mode === "signin" ? t('auth.noAccount') : t('auth.hasAccount')}
             </span>
             <Button variant="ghost" size="sm" onClick={() => setMode(mode === "signin" ? "signup" : "signin")}> 
-              {mode === "signin" ? "Create one" : "Sign in"}
+              {mode === "signin" ? t('auth.createOne') : t('auth.signIn')}
             </Button>
           </div>
         </section>
