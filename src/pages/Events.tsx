@@ -1,5 +1,4 @@
 import Navbar from "@/components/ui/navbar";
-import Footer from "@/components/ui/footer";
 import EventsSection from "@/components/ui/events-section";
 import { useEffect } from "react";
 
@@ -46,7 +45,7 @@ const Events = () => {
         </header>
         <EventsSection />
       </main>
-      <Footer />
+      
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

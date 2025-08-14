@@ -1,5 +1,4 @@
 import Navbar from "@/components/ui/navbar";
-import Footer from "@/components/ui/footer";
 import { useEffect } from "react";
 
 const setMeta = (name: string, content: string) => {
@@ -62,7 +61,7 @@ const About = () => {
           </aside>
         </section>
       </main>
-      <Footer />
+      
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
