@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
@@ -81,6 +81,13 @@ export type Database = {
             columns: ["blog_post_id"]
             isOneToOne: false
             referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_blog_post_id_fkey"
+            columns: ["blog_post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -308,6 +315,13 @@ export type Database = {
             referencedRelation: "events"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "photos_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -384,7 +398,168 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      blog_posts_safe: {
+        Row: {
+          author_id: string | null
+          content: string | null
+          created_at: string | null
+          excerpt: string | null
+          featured_image: string | null
+          id: string | null
+          published: boolean | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          author_id?: never
+          content?: string | null
+          created_at?: string | null
+          excerpt?: string | null
+          featured_image?: string | null
+          id?: string | null
+          published?: boolean | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: never
+          content?: string | null
+          created_at?: string | null
+          excerpt?: string | null
+          featured_image?: string | null
+          id?: string | null
+          published?: boolean | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      comments_safe: {
+        Row: {
+          author_id: string | null
+          blog_post_id: string | null
+          content: string | null
+          created_at: string | null
+          id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          author_id?: never
+          blog_post_id?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: never
+          blog_post_id?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_blog_post_id_fkey"
+            columns: ["blog_post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_blog_post_id_fkey"
+            columns: ["blog_post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events_safe: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          event_date: string | null
+          id: string | null
+          location: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: never
+          description?: string | null
+          event_date?: string | null
+          id?: string | null
+          location?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: never
+          description?: string | null
+          event_date?: string | null
+          id?: string | null
+          location?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      photos_safe: {
+        Row: {
+          caption: string | null
+          created_at: string | null
+          event_id: string | null
+          id: string | null
+          is_thumbnail: boolean | null
+          storage_path: string | null
+          thumbnail_path: string | null
+          updated_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string | null
+          event_id?: string | null
+          id?: string | null
+          is_thumbnail?: boolean | null
+          storage_path?: string | null
+          thumbnail_path?: string | null
+          updated_at?: string | null
+          uploaded_by?: never
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string | null
+          event_id?: string | null
+          id?: string | null
+          is_thumbnail?: boolean | null
+          storage_path?: string | null
+          thumbnail_path?: string | null
+          updated_at?: string | null
+          uploaded_by?: never
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photos_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photos_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       bootstrap_first_admin: {
@@ -400,17 +575,21 @@ export type Database = {
         Returns: boolean
       }
       get_masked_author_info: {
-        Args: { user_id_field: string; current_user_id?: string }
+        Args: { current_user_id?: string; user_id_field: string }
         Returns: string
       }
       get_masked_storage_path: {
-        Args: { storage_path: string; current_user_id?: string }
+        Args: { current_user_id?: string; storage_path: string }
+        Returns: string
+      }
+      get_safe_author_id: {
+        Args: { target_author_id: string }
         Returns: string
       }
       has_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
         }
         Returns: boolean
       }
