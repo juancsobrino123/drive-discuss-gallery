@@ -187,7 +187,7 @@ const Forum = () => {
       return;
     }
 
-    // Get reply counts for each thread
+    // Get reply counts and user info for each thread
     const threadsWithCounts = await Promise.all(
       (data || []).map(async (thread) => {
         const { count } = await supabase
@@ -195,9 +195,21 @@ const Forum = () => {
           .select("*", { count: "exact", head: true })
           .eq("thread_id", thread.id);
         
+        // Get user display info if authenticated
+        let username = "Usuario Anónimo";
+        if (user) {
+          const { data: userInfo } = await supabase
+            .rpc("get_user_display_info", { target_user_id: thread.author_id });
+          
+          if (userInfo && userInfo.length > 0) {
+            username = userInfo[0].username || "Usuario Anónimo";
+          }
+        }
+        
         return {
           ...thread,
           reply_count: count || 0,
+          username,
         };
       })
     );
@@ -649,11 +661,23 @@ const Forum = () => {
             ) : (
               <div className="space-y-4">
                 {threads.map((thread) => (
-                  <Card
-                    key={thread.id}
-                    className="cursor-pointer hover:shadow-lg hover:border-primary/20 transition-all duration-200 group"
-                    onClick={() => navigate(`/forum/${thread.id}`)}
-                  >
+                <Card
+                  key={thread.id}
+                  className={`hover:shadow-lg hover:border-primary/20 transition-all duration-200 group ${
+                    user ? "cursor-pointer" : ""
+                  }`}
+                  onClick={() => {
+                    if (user) {
+                      navigate(`/forum/${thread.id}`);
+                    } else {
+                      toast({
+                        title: "Authentication required",
+                        description: "Please log in to view thread details",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                >
                     <CardContent className="pt-6">
                       <div className="flex items-start gap-4">
                         {/* Avatar */}
@@ -704,11 +728,15 @@ const Forum = () => {
                               
                               {/* Thread Meta */}
                               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                                <div className="flex items-center gap-1">
-                                  <UserIcon className="h-4 w-4" />
-                                  <span className="font-medium">{thread.username || 'Anonymous'}</span>
-                                </div>
-                                <span className="hidden sm:inline">•</span>
+                                {user && (
+                                  <>
+                                    <div className="flex items-center gap-1">
+                                      <UserIcon className="h-4 w-4" />
+                                      <span className="font-medium">{thread.username || 'Usuario Anónimo'}</span>
+                                    </div>
+                                    <span className="hidden sm:inline">•</span>
+                                  </>
+                                )}
                                 <time className="flex items-center gap-1">
                                   <Clock className="h-4 w-4" />
                                   {new Date(thread.created_at).toLocaleDateString("es-ES", {
