@@ -49,7 +49,7 @@ const Navbar = () => {
           {/* Logo */}
           <a href="/" className="flex items-center space-x-2" aria-label="AUTODEBATE home">
             <img
-              src="/lovable-uploads/c2057dc6-874e-4d9d-b882-64f80e36c03c.png"
+              src="/lovable-uploads/a15c83a4-03e8-47b9-b54f-b6bf762bd3fc.png"
               alt="AUTODEBATE logo"
               className="h-8 w-auto light:brightness-0 light:saturate-100 light:invert-[.35] light:sepia-[1] light:hue-rotate-[205deg] light:brightness-[.95] light:contrast-[1.15]"
               width={32}

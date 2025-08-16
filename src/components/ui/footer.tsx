@@ -44,7 +44,7 @@ const Footer = () => {
           <div className="lg:col-span-2">
             <a href="/" className="flex items-center space-x-3 mb-6" aria-label="AUTODEBATE home">
               <img
-                src="/lovable-uploads/c2057dc6-874e-4d9d-b882-64f80e36c03c.png"
+                src="/lovable-uploads/a15c83a4-03e8-47b9-b54f-b6bf762bd3fc.png"
                 alt="AUTODEBATE logo"
                 className="h-12 w-auto"
                 width={48}
