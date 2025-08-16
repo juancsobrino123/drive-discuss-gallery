@@ -51,7 +51,7 @@ const Navbar = () => {
             <img
               src="/lovable-uploads/c2057dc6-874e-4d9d-b882-64f80e36c03c.png"
               alt="AUTODEBATE logo"
-              className="h-8 w-auto"
+              className="h-8 w-auto light:brightness-0 light:saturate-100 light:invert-[.35] light:sepia-[1] light:hue-rotate-[205deg] light:brightness-[.95] light:contrast-[1.15]"
               width={32}
               height={32}
             />
