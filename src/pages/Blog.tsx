@@ -399,7 +399,7 @@ const Blog = () => {
                       </div>
                     )}
                     <CardHeader className={post.featured_image ? "relative -mt-16 z-10" : ""}>
-                      <CardTitle className={`line-clamp-2 transition-colors group-hover:text-primary ${
+                      <CardTitle className={`transition-colors group-hover:text-primary ${
                         post.featured_image ? "text-white" : ""
                       }`}>
                         {post.title}
