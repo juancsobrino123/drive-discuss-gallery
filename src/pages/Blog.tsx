@@ -395,13 +395,16 @@ const Blog = () => {
                           alt={post.title}
                           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                        <div className="absolute bottom-4 left-4 right-4 z-10">
+                          <CardTitle className="text-white transition-colors group-hover:text-primary/90 leading-tight">
+                            {post.title}
+                          </CardTitle>
+                        </div>
                       </div>
                     )}
-                    <CardHeader className={post.featured_image ? "relative -mt-16 z-10" : ""}>
-                      <CardTitle className={`transition-colors group-hover:text-primary ${
-                        post.featured_image ? "text-white" : ""
-                      }`}>
+                    <CardHeader className={post.featured_image ? "hidden" : ""}>
+                      <CardTitle className="transition-colors group-hover:text-primary">
                         {post.title}
                       </CardTitle>
                     </CardHeader>
