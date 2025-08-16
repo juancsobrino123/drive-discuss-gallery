@@ -397,7 +397,7 @@ const Blog = () => {
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                         <div className="absolute bottom-4 left-4 right-4 z-10">
-                          <CardTitle className="text-white transition-colors group-hover:text-primary/90 leading-tight">
+                          <CardTitle className="text-white leading-tight">
                             {post.title}
                           </CardTitle>
                         </div>
