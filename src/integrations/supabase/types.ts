@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          created_at: string
+          description: string
+          icon: string | null
+          id: string
+          name: string
+          points: number | null
+          requirements: Json | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          icon?: string | null
+          id?: string
+          name: string
+          points?: number | null
+          requirements?: Json | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          points?: number | null
+          requirements?: Json | null
+          type?: string
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           author_id: string
@@ -313,22 +346,46 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
+          birth_date: string | null
+          city: string | null
+          country: string | null
           created_at: string | null
           id: string
+          level: number | null
+          points: number | null
+          privacy_settings: Json | null
+          social_links: Json | null
           updated_at: string | null
           username: string | null
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
+          birth_date?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string | null
           id: string
+          level?: number | null
+          points?: number | null
+          privacy_settings?: Json | null
+          social_links?: Json | null
           updated_at?: string | null
           username?: string | null
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
+          birth_date?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string | null
           id?: string
+          level?: number | null
+          points?: number | null
+          privacy_settings?: Json | null
+          social_links?: Json | null
           updated_at?: string | null
           username?: string | null
         }
@@ -361,6 +418,159 @@ export type Database = {
         }
         Relationships: []
       }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_achievements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_activity_log: {
+        Row: {
+          activity_type: string
+          created_at: string
+          id: string
+          points: number | null
+          related_id: string | null
+          related_type: string | null
+          user_id: string
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          id?: string
+          points?: number | null
+          related_id?: string | null
+          related_type?: string | null
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          id?: string
+          points?: number | null
+          related_id?: string | null
+          related_type?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_activity_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_cars: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_current: boolean | null
+          make: string
+          model: string
+          updated_at: string
+          user_id: string
+          year: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_current?: boolean | null
+          make: string
+          model: string
+          updated_at?: string
+          user_id: string
+          year?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_current?: boolean | null
+          make?: string
+          model?: string
+          updated_at?: string
+          user_id?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_cars_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_favorite_cars: {
+        Row: {
+          created_at: string
+          id: string
+          make: string
+          model: string
+          user_id: string
+          year: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          make: string
+          model: string
+          user_id: string
+          year?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          make?: string
+          model?: string
+          user_id?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_favorite_cars_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -390,6 +600,10 @@ export type Database = {
       bootstrap_first_admin: {
         Args: { admin_email: string }
         Returns: boolean
+      }
+      calculate_user_level: {
+        Args: { user_points: number }
+        Returns: number
       }
       can_see_author_info: {
         Args: { target_user_id: string }
@@ -425,6 +639,16 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      update_user_points: {
+        Args: {
+          activity_type: string
+          points_to_add: number
+          related_id?: string
+          related_type?: string
+          target_user_id: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
