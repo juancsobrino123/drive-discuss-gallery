@@ -86,6 +86,13 @@ const Navbar = () => {
               </DropdownMenuContent>
             </DropdownMenu>
             
+            <a
+              href="/comunidad"
+              className="text-muted-foreground hover:text-primary transition-colors duration-300 font-medium"
+            >
+              Comunidad
+            </a>
+            
             {navItems.slice(1).map((item) => (
               <a
                 key={item.label}
@@ -181,6 +188,14 @@ const Navbar = () => {
           {item.label}
         </a>
       ))}
+      
+      <a
+        href="/comunidad"
+        className="text-muted-foreground hover:text-primary transition-colors duration-300 font-medium py-2"
+        onClick={() => setIsOpen(false)}
+      >
+        Comunidad
+      </a>
       
       {/* Mobile News Items */}
       <div className="border-t border-border pt-2 mt-2">
