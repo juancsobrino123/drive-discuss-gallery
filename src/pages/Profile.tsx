@@ -235,6 +235,14 @@ const Profile = () => {
                 {loading ? "Guardando..." : "Guardar cambios"}
               </Button>
               <Button
+                variant="outline"
+                onClick={() => navigate("/edit-profile")}
+                disabled={loading}
+                className="flex-1"
+              >
+                Editar Perfil Completo
+              </Button>
+              <Button
                 variant="destructive"
                 onClick={handleSignOut}
                 disabled={loading}
