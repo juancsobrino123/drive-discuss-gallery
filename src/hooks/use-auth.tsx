@@ -2,10 +2,24 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
+interface Profile {
+  username: string;
+  avatar_url: string | null;
+  bio: string | null;
+  birth_date: string | null;
+  city: string | null;
+  country: string | null;
+  social_links: any;
+  points: number | null;
+  level: number | null;
+  created_at: string | null;
+  privacy_settings: any;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  profile: { username: string; avatar_url: string | null } | null;
+  profile: Profile | null;
   roles: string[];
   loading: boolean;
   canCreateEvent: boolean;
@@ -21,7 +35,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<{ username: string; avatar_url: string | null } | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -40,7 +54,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('username, avatar_url')
+        .select('username, avatar_url, bio, birth_date, city, country, social_links, points, level, created_at, privacy_settings')
         .eq('id', user.id)
         .maybeSingle();
       
@@ -63,7 +77,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         try {
           const { data: profileData } = await supabase
             .from('profiles')
-            .select('username, avatar_url')
+            .select('username, avatar_url, bio, birth_date, city, country, social_links, points, level, created_at, privacy_settings')
             .eq('id', session.user.id)
             .maybeSingle();
           
@@ -72,13 +86,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           } else {
             // Crear perfil básico si no existe
             const username = session.user.email?.split('@')[0] || 'Usuario';
-            setProfile({ username, avatar_url: null });
+            setProfile({ 
+              username, 
+              avatar_url: null,
+              bio: null,
+              birth_date: null,
+              city: null,
+              country: null,
+              social_links: null,
+              points: 0,
+              level: 1,
+              created_at: null,
+              privacy_settings: null
+            });
           }
         } catch (error) {
           console.error('Error loading profile:', error);
           // Fallback perfil básico
           const username = session.user.email?.split('@')[0] || 'Usuario';
-          setProfile({ username, avatar_url: null });
+          setProfile({ 
+            username, 
+            avatar_url: null,
+            bio: null,
+            birth_date: null,
+            city: null,
+            country: null,
+            social_links: null,
+            points: 0,
+            level: 1,
+            created_at: null,
+            privacy_settings: null
+          });
         }
         
         // Cargar roles reales

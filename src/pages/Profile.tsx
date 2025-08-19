@@ -187,69 +187,101 @@ const Profile = () => {
         </div>
 
         <div className="space-y-6">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-20 w-20">
-              <AvatarImage src={avatarUrl} alt={username} />
-              <AvatarFallback className="text-lg bg-primary text-primary-foreground">
-                {username?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U"}
+          {/* Profile Header */}
+          <div className="flex items-center gap-6">
+            <Avatar className="h-24 w-24">
+              <AvatarImage src={profile?.avatar_url} alt={profile?.username} />
+              <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+                {profile?.username?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U"}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <h2 className="text-lg font-semibold text-foreground">{username || user?.email}</h2>
-              <p className="text-sm text-muted-foreground">{user?.email}</p>
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold text-foreground">{profile?.username || user?.email}</h2>
+              <p className="text-muted-foreground">{user?.email}</p>
+              {profile?.bio && (
+                <p className="mt-2 text-foreground">{profile.bio}</p>
+              )}
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Nombre de usuario
-              </label>
-              <Input
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Ingresa tu nombre de usuario"
-                disabled={loading}
-              />
+          {/* Profile Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Personal Info */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-foreground">Información Personal</h3>
+              <div className="space-y-3">
+                {profile?.birth_date && (
+                  <div>
+                    <span className="text-sm font-medium text-muted-foreground">Fecha de nacimiento:</span>
+                    <p className="text-foreground">{new Date(profile.birth_date).toLocaleDateString()}</p>
+                  </div>
+                )}
+                {(profile?.city || profile?.country) && (
+                  <div>
+                    <span className="text-sm font-medium text-muted-foreground">Ubicación:</span>
+                    <p className="text-foreground">
+                      {[profile?.city, profile?.country].filter(Boolean).join(", ")}
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <span className="text-sm font-medium text-muted-foreground">Miembro desde:</span>
+                  <p className="text-foreground">{new Date(profile?.created_at || '').toLocaleDateString()}</p>
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Avatar
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={onFileChange}
-                className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-                disabled={loading}
-              />
+            {/* Gamification */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-foreground">Actividad</h3>
+              <div className="space-y-3">
+                <div>
+                  <span className="text-sm font-medium text-muted-foreground">Puntos:</span>
+                  <p className="text-foreground font-semibold">{profile?.points || 0}</p>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-muted-foreground">Nivel:</span>
+                  <p className="text-foreground font-semibold">{profile?.level || 1}</p>
+                </div>
+              </div>
             </div>
+          </div>
 
-            <div className="flex gap-4 pt-4">
-              <Button
-                onClick={saveProfile}
-                disabled={loading || !username.trim()}
-                className="flex-1"
-              >
-                {loading ? "Guardando..." : "Guardar cambios"}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate("/edit-profile")}
-                disabled={loading}
-                className="flex-1"
-              >
-                Editar Perfil Completo
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={handleSignOut}
-                disabled={loading}
-              >
-                Cerrar sesión
-              </Button>
+          {/* Social Links */}
+          {profile?.social_links && Object.keys(profile.social_links).length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-foreground">Redes Sociales</h3>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(profile.social_links).map(([platform, url]) => (
+                  <a
+                    key={platform}
+                    href={url as string}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1 bg-secondary text-secondary-foreground rounded-full text-sm hover:bg-secondary/80 transition-colors"
+                  >
+                    {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                  </a>
+                ))}
+              </div>
             </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-4 pt-4">
+            <Button
+              onClick={() => navigate("/edit-profile")}
+              className="flex-1"
+            >
+              Editar Perfil
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleSignOut}
+              disabled={loading}
+            >
+              Cerrar sesión
+            </Button>
           </div>
         </div>
       </section>
