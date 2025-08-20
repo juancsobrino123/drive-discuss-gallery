@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Download, Calendar, MapPin, Upload, Trash2, Pencil, Star } from "lucide-react";
+import { Download, Calendar, MapPin, Upload, Plus } from "lucide-react";
 import galleryPreview from "@/assets/gallery-preview.jpg";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
+import PhotoCard from "@/components/ui/photo-card";
+import PhotoUploadDialog from "@/components/ui/photo-upload-dialog";
+import PhotoSearch from "@/components/ui/photo-search";
 
 interface EventItem {
   id: string;
@@ -18,6 +20,13 @@ interface EventItem {
   created_by: string;
 }
 
+interface UserCar {
+  id: string;
+  make: string;
+  model: string;
+  year: number | null;
+}
+
 interface PhotoItem {
   id: string;
   event_id: string;
@@ -26,6 +35,11 @@ interface PhotoItem {
   caption: string | null;
   uploaded_by: string;
   is_thumbnail: boolean;
+  user_car_id: string | null;
+  specs: any;
+  tags: string[];
+  likes_count: number;
+  favorites_count: number;
 }
 
 const GalleryDetail = () => {
@@ -36,8 +50,12 @@ const GalleryDetail = () => {
 
   const [event, setEvent] = useState<EventItem | null>(null);
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
+  const [filteredPhotos, setFilteredPhotos] = useState<PhotoItem[]>([]);
   const [thumbUrls, setThumbUrls] = useState<Record<string, string>>({});
-  const [creating, setCreating] = useState(false);
+  const [userCars, setUserCars] = useState<Record<string, UserCar>>({});
+  const [userLikes, setUserLikes] = useState<Set<string>>(new Set());
+  const [userFavorites, setUserFavorites] = useState<Set<string>>(new Set());
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
   // SEO tags
   useEffect(() => {
@@ -103,7 +121,10 @@ const GalleryDetail = () => {
     try {
       const { data, error } = await supabase
         .from('photos')
-        .select('id, event_id, storage_path, thumbnail_path, caption, uploaded_by, is_thumbnail')
+        .select(`
+          id, event_id, storage_path, thumbnail_path, caption, uploaded_by, is_thumbnail,
+          user_car_id, specs, tags, likes_count, favorites_count
+        `)
         .eq('event_id', eventId)
         .order('created_at', { ascending: false });
       
@@ -115,6 +136,9 @@ const GalleryDetail = () => {
       
       const items = (data || []) as PhotoItem[];
       setPhotos(items);
+      setFilteredPhotos(items);
+
+      // Load thumbnail URLs
       const urls: Record<string, string> = {};
       for (const p of items) {
         if (p.thumbnail_path) {
@@ -125,6 +149,42 @@ const GalleryDetail = () => {
         }
       }
       setThumbUrls(urls);
+
+      // Load associated car data
+      const carIds = [...new Set(items.map(p => p.user_car_id).filter(Boolean))];
+      if (carIds.length > 0) {
+        const { data: carsData } = await supabase
+          .from('user_cars')
+          .select('id, make, model, year')
+          .in('id', carIds);
+        
+        const carsMap: Record<string, UserCar> = {};
+        carsData?.forEach(car => {
+          carsMap[car.id] = car;
+        });
+        setUserCars(carsMap);
+      }
+
+      // Load user likes and favorites if authenticated
+      if (user) {
+        const photoIds = items.map(p => p.id);
+        
+        const { data: likesData } = await supabase
+          .from('photo_likes')
+          .select('photo_id')
+          .eq('user_id', user.id)
+          .in('photo_id', photoIds);
+        
+        const { data: favoritesData } = await supabase
+          .from('photo_favorites')
+          .select('photo_id')
+          .eq('user_id', user.id)
+          .in('photo_id', photoIds);
+        
+        setUserLikes(new Set(likesData?.map(l => l.photo_id) || []));
+        setUserFavorites(new Set(favoritesData?.map(f => f.photo_id) || []));
+      }
+
     } catch (err) {
       console.error('Unexpected error loading photos:', err);
       toast({ description: 'Error inesperado cargando fotos' });
@@ -134,39 +194,63 @@ const GalleryDetail = () => {
   useEffect(() => {
     loadEvent();
     loadPhotos();
-  }, [eventId]);
+  }, [eventId, user]);
 
-  const handleUpload = async (files: FileList | null) => {
-    if (!files || files.length === 0 || !eventId) return;
-    try {
-      setCreating(true);
-      if (!user) {
-        toast({ description: 'Inicia sesión para subir fotos' });
-        return;
-      }
-      for (const file of Array.from(files)) {
-        const basePath = `${user.id}/${eventId}/${Date.now()}_${file.name}`;
-        const { error: upErr } = await supabase.storage.from('gallery').upload(basePath, file, { upsert: false });
-        if (upErr) throw upErr;
-        const { error: thErr } = await supabase.storage.from('gallery-thumbs').upload(basePath, file, { upsert: false });
-        if (thErr) console.warn('Thumb upload failed', thErr);
-        const { error: insErr } = await supabase.from('photos').insert({
-          event_id: eventId,
-          storage_path: basePath,
-          thumbnail_path: basePath,
-          caption: null,
-          uploaded_by: user.id,
-        });
-        if (insErr) throw insErr;
-      }
-      toast({ description: 'Fotos subidas' });
-      await loadPhotos();
-    } catch (e: any) {
-      console.error('Error uploading:', e);
-      toast({ description: e.message || 'Error al subir fotos' });
-    } finally {
-      setCreating(false);
+  // Handle search/filter
+  const handleSearch = (filters: any) => {
+    let filtered = [...photos];
+
+    if (filters.query) {
+      const query = filters.query.toLowerCase();
+      filtered = filtered.filter(photo => 
+        photo.caption?.toLowerCase().includes(query) ||
+        photo.tags?.some(tag => tag.toLowerCase().includes(query)) ||
+        (photo.user_car_id && userCars[photo.user_car_id] && 
+         `${userCars[photo.user_car_id].make} ${userCars[photo.user_car_id].model}`.toLowerCase().includes(query))
+      );
     }
+
+    if (filters.make && filters.make !== "") {
+      filtered = filtered.filter(photo => 
+        photo.user_car_id && userCars[photo.user_car_id]?.make === filters.make
+      );
+    }
+
+    if (filters.model && filters.model !== "") {
+      filtered = filtered.filter(photo => 
+        photo.user_car_id && userCars[photo.user_car_id]?.model === filters.model
+      );
+    }
+
+    if (filters.year && filters.year !== "") {
+      filtered = filtered.filter(photo => 
+        photo.user_car_id && userCars[photo.user_car_id]?.year === parseInt(filters.year)
+      );
+    }
+
+    if (filters.tags && filters.tags.length > 0) {
+      filtered = filtered.filter(photo => 
+        photo.tags?.some(tag => filters.tags.includes(tag))
+      );
+    }
+
+    if (filters.hasLikes) {
+      filtered = filtered.filter(photo => photo.likes_count > 0);
+    }
+
+    if (filters.hasFavorites) {
+      filtered = filtered.filter(photo => photo.favorites_count > 0);
+    }
+
+    setFilteredPhotos(filtered);
+  };
+
+  const handleLike = async (photoId: string) => {
+    await loadPhotos(); // Refresh to get updated counts and user interactions
+  };
+
+  const handleFavorite = async (photoId: string) => {
+    await loadPhotos(); // Refresh to get updated counts and user interactions
   };
 
   const handleDownload = async (photo: PhotoItem) => {
@@ -190,7 +274,7 @@ const GalleryDetail = () => {
         toast({ description: 'Inicia sesión para descargar' });
         return;
       }
-      for (const p of photos) {
+      for (const p of filteredPhotos) {
         const { data, error } = await supabase.storage.from('gallery').createSignedUrl(p.storage_path, 60);
         if (!error && data?.signedUrl) {
           window.open(data.signedUrl, '_blank');
@@ -270,15 +354,12 @@ const GalleryDetail = () => {
           </div>
           <div className="mt-4 flex flex-wrap gap-3">
             <Button variant="platform" onClick={handleDownloadAll} disabled={!canDownload}>
-              <Download className="w-4 h-4 mr-2" /> Descargar todo
+              <Download className="w-4 h-4 mr-2" /> Descargar todo ({filteredPhotos.length})
             </Button>
             {canUpload && (
-              <label className="inline-flex items-center">
-                <input type="file" className="hidden" multiple onChange={(e) => handleUpload(e.target.files)} />
-                <Button variant="secondary" asChild>
-                  <span><Upload className="w-4 h-4 mr-2" /> Subir fotos</span>
-                </Button>
-              </label>
+              <Button variant="secondary" onClick={() => setUploadDialogOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" /> Subir fotos
+              </Button>
             )}
           </div>
         </div>
@@ -289,38 +370,47 @@ const GalleryDetail = () => {
 
       <section className="py-8">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {photos.map((p) => (
-              <Card key={p.id} className="overflow-hidden">
-                <img
-                  src={thumbUrls[p.id] || galleryPreview}
-                  alt={p.caption || 'Foto de evento'}
-                  className="w-full h-48 object-cover"
-                  loading="lazy"
-                />
-                <div className="p-2 flex items-center justify-between">
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleDownload(p)} disabled={!canDownload} aria-label="Descargar">
-                      <Download className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleEditCaption(p)} disabled={!(isAdmin || p.uploaded_by === user?.id)} aria-label="Editar">
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant={p.is_thumbnail ? 'default' : 'ghost'} size="icon" onClick={() => toggleThumbnail(p)} aria-label="Marcar como miniatura">
-                      <Star className={p.is_thumbnail ? 'text-primary' : ''} />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeletePhoto(p)} disabled={!(isAdmin || p.uploaded_by === user?.id)} aria-label="Eliminar">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </Card>
+          {/* Search and Filters */}
+          <PhotoSearch onSearch={handleSearch} className="mb-6" />
+
+          {/* Photos Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredPhotos.map((photo) => (
+              <PhotoCard
+                key={photo.id}
+                photo={photo}
+                imageUrl={thumbUrls[photo.id] || galleryPreview}
+                userCar={photo.user_car_id ? userCars[photo.user_car_id] : undefined}
+                isLiked={userLikes.has(photo.id)}
+                isFavorited={userFavorites.has(photo.id)}
+                canEdit={isAdmin || photo.uploaded_by === user?.id}
+                canDelete={isAdmin || photo.uploaded_by === user?.id}
+                canDownload={canDownload}
+                onLike={handleLike}
+                onFavorite={handleFavorite}
+                onDownload={handleDownload}
+                onEdit={handleEditCaption}
+                onDelete={handleDeletePhoto}
+                onToggleThumbnail={toggleThumbnail}
+              />
             ))}
           </div>
+
+          {filteredPhotos.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No se encontraron fotos</p>
+            </div>
+          )}
         </div>
       </section>
+
+      {/* Upload Dialog */}
+      <PhotoUploadDialog
+        open={uploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
+        eventId={eventId || ""}
+        onUploadComplete={loadPhotos}
+      />
     </main>
   );
 };

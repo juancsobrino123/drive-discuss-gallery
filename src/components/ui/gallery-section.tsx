@@ -93,7 +93,7 @@ const GallerySection = () => {
     try {
       const { data, error } = await supabase
         .from("photos")
-        .select("id, event_id, storage_path, thumbnail_path, caption, uploaded_by")
+        .select("id, event_id, storage_path, thumbnail_path, caption, uploaded_by, user_car_id, specs, tags, likes_count, favorites_count")
         .eq("event_id", eventId)
         .order("created_at", { ascending: false });
 
@@ -230,6 +230,11 @@ const GallerySection = () => {
           thumbnail_path: basePath,
           caption: null,
           uploaded_by: user.id,
+          user_car_id: null,
+          specs: {},
+          tags: [],
+          likes_count: 0,
+          favorites_count: 0,
         });
         if (insErr) throw insErr;
       }
