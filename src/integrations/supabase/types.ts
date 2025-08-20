@@ -299,39 +299,112 @@ export type Database = {
           },
         ]
       }
+      photo_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          photo_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          photo_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          photo_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_favorites_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "photos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      photo_likes: {
+        Row: {
+          created_at: string
+          id: string
+          photo_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          photo_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          photo_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_likes_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "photos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       photos: {
         Row: {
           caption: string | null
           created_at: string
           event_id: string
+          favorites_count: number | null
           id: string
           is_thumbnail: boolean
+          likes_count: number | null
+          specs: Json | null
           storage_path: string
+          tags: string[] | null
           thumbnail_path: string | null
           updated_at: string
           uploaded_by: string
+          user_car_id: string | null
         }
         Insert: {
           caption?: string | null
           created_at?: string
           event_id: string
+          favorites_count?: number | null
           id?: string
           is_thumbnail?: boolean
+          likes_count?: number | null
+          specs?: Json | null
           storage_path: string
+          tags?: string[] | null
           thumbnail_path?: string | null
           updated_at?: string
           uploaded_by: string
+          user_car_id?: string | null
         }
         Update: {
           caption?: string | null
           created_at?: string
           event_id?: string
+          favorites_count?: number | null
           id?: string
           is_thumbnail?: boolean
+          likes_count?: number | null
+          specs?: Json | null
           storage_path?: string
+          tags?: string[] | null
           thumbnail_path?: string | null
           updated_at?: string
           uploaded_by?: string
+          user_car_id?: string | null
         }
         Relationships: [
           {
@@ -339,6 +412,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photos_user_car_id_fkey"
+            columns: ["user_car_id"]
+            isOneToOne: false
+            referencedRelation: "user_cars"
             referencedColumns: ["id"]
           },
         ]
