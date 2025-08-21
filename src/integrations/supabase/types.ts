@@ -693,6 +693,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      can_view_profile: {
+        Args: { requesting_user_id?: string; target_user_id: string }
+        Returns: boolean
+      }
       get_masked_author_info: {
         Args: { current_user_id?: string; user_id_field: string }
         Returns: string
@@ -710,6 +714,24 @@ export type Database = {
         Returns: {
           avatar_url: string
           user_id: string
+          username: string
+        }[]
+      }
+      get_visible_profile_data: {
+        Args: { requesting_user_id?: string; target_user_id: string }
+        Returns: {
+          avatar_url: string
+          bio: string
+          birth_date: string
+          city: string
+          country: string
+          created_at: string
+          id: string
+          level: number
+          points: number
+          privacy_settings: Json
+          social_links: Json
+          updated_at: string
           username: string
         }[]
       }
