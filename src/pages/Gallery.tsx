@@ -1,9 +1,12 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import GallerySection from "@/components/ui/gallery-section";
+import ShowroomSection from "@/components/ui/showroom-section";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Gallery = () => {
   const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState("events");
 
   useEffect(() => {
     const title = "Galería de Eventos | AUTODEBATE";
@@ -57,10 +60,24 @@ const Gallery = () => {
       {/* Structured data for SEO */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <section aria-labelledby="gallery-all" className="py-8">
+      <section aria-labelledby="gallery-content" className="py-8">
         <div className="container mx-auto px-4">
-          <h2 id="gallery-all" className="sr-only">Todas las galerías</h2>
-          <GallerySection />
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-8">
+              <TabsTrigger value="events">Eventos</TabsTrigger>
+              <TabsTrigger value="showroom">Showroom</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="events">
+              <h2 id="gallery-events" className="sr-only">Galerías de eventos</h2>
+              <GallerySection />
+            </TabsContent>
+            
+            <TabsContent value="showroom">
+              <h2 id="gallery-showroom" className="sr-only">Showroom de la comunidad</h2>
+              <ShowroomSection />
+            </TabsContent>
+          </Tabs>
         </div>
       </section>
     </main>

@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import CarPhotoUpload from "@/components/ui/car-photo-upload";
 
 interface UserCar {
   id?: string;
@@ -475,13 +476,23 @@ const EditProfile = () => {
                       />
                     </div>
                   </div>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => removeCurrentCar(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    {car.id && (
+                      <CarPhotoUpload
+                        carId={car.id}
+                        carMake={car.make}
+                        carModel={car.model}
+                        carYear={car.year}
+                      />
+                    )}
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => removeCurrentCar(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               ))}
               
