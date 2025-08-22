@@ -53,7 +53,7 @@ interface Photo {
   created_at: string;
   event: {
     title: string;
-  };
+  } | null;
 }
 
 export default function Showroom() {
@@ -129,18 +129,22 @@ export default function Showroom() {
 
       setAchievements(achievementsData || []);
 
-      // Load user photos
+      // Load user photos (excluding car photos which have null event_id)
       const { data: photosData } = await supabase
         .from('photos')
         .select(`
           *,
-          event:events(title)
+          event:events!left(title)
         `)
         .eq('uploaded_by', userId)
+        .not('event_id', 'is', null)
         .order('created_at', { ascending: false })
         .limit(12);
 
-      setPhotos(photosData || []);
+      setPhotos((photosData || []).map((photo: any) => ({
+        ...photo,
+        event: photo.event && typeof photo.event === 'object' && !photo.event.error ? photo.event : null
+      })));
 
       // Generate thumbnail URLs
       if (photosData && photosData.length > 0) {

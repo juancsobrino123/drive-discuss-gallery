@@ -76,7 +76,7 @@ export default function ShowroomSection() {
             privacy_settings
           )
         `)
-        .eq("event_id", "00000000-0000-0000-0000-000000000000")
+        .is("event_id", null)
         .not("user_car_id", "is", null)
         .order("created_at", { ascending: false });
 

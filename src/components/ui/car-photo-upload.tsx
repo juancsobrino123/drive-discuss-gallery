@@ -4,27 +4,29 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Camera, Upload, X, Plus } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Camera, Upload } from "lucide-react";
 
 interface CarPhotoUploadProps {
   carId: string;
   carMake: string;
   carModel: string;
   carYear?: number;
+  carDescription?: string;
   onUploadComplete?: () => void;
 }
 
-export default function CarPhotoUpload({ carId, carMake, carModel, carYear, onUploadComplete }: CarPhotoUploadProps) {
+export default function CarPhotoUpload({ 
+  carId, 
+  carMake, 
+  carModel, 
+  carYear, 
+  carDescription, 
+  onUploadComplete 
+}: CarPhotoUploadProps) {
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [caption, setCaption] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState("");
-  const [specs, setSpecs] = useState<Array<{ key: string; value: string }>>([]);
   const [uploading, setUploading] = useState(false);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,31 +34,6 @@ export default function CarPhotoUpload({ carId, carMake, carModel, carYear, onUp
     if (files) {
       setSelectedFiles(Array.from(files));
     }
-  };
-
-  const addTag = () => {
-    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-      setTags([...tags, tagInput.trim()]);
-      setTagInput("");
-    }
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
-  };
-
-  const addSpec = () => {
-    setSpecs([...specs, { key: "", value: "" }]);
-  };
-
-  const updateSpec = (index: number, key: string, value: string) => {
-    const newSpecs = [...specs];
-    newSpecs[index] = { key, value };
-    setSpecs(newSpecs);
-  };
-
-  const removeSpec = (index: number) => {
-    setSpecs(specs.filter((_, i) => i !== index));
   };
 
   const handleUpload = async () => {
@@ -86,24 +63,19 @@ export default function CarPhotoUpload({ carId, carMake, carModel, carYear, onUp
 
         if (thumbError) console.warn("Thumbnail upload failed:", thumbError);
 
-        // Convert specs to object
-        const specsObject = specs.reduce((acc, spec) => {
-          if (spec.key && spec.value) {
-            acc[spec.key] = spec.value;
-          }
-          return acc;
-        }, {} as Record<string, string>);
+        // Create automatic caption from car data
+        const autoCaption = `${carMake} ${carModel} ${carYear ? carYear : ''}${carDescription ? ' - ' + carDescription : ''}`.trim();
 
-        // Insert photo record without event_id (car showroom photos)
+        // Insert photo record (car showroom photos with null event_id)
         const { error: insertError } = await supabase.from("photos").insert({
-          event_id: '00000000-0000-0000-0000-000000000000', // Special UUID for showroom photos
+          event_id: null, // Car photos don't belong to events
           storage_path: fileName,
           thumbnail_path: fileName,
-          caption: caption || null,
+          caption: autoCaption,
           uploaded_by: user.id,
           user_car_id: carId,
-          tags: tags,
-          specs: specsObject,
+          tags: [], // Empty tags array
+          specs: {}, // Empty specs object
         });
 
         if (insertError) throw insertError;
@@ -123,10 +95,6 @@ export default function CarPhotoUpload({ carId, carMake, carModel, carYear, onUp
 
   const resetForm = () => {
     setSelectedFiles([]);
-    setCaption("");
-    setTags([]);
-    setTagInput("");
-    setSpecs([]);
   };
 
   return (
@@ -137,7 +105,7 @@ export default function CarPhotoUpload({ carId, carMake, carModel, carYear, onUp
           Subir fotos
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Subir fotos de {carMake} {carModel} {carYear}</DialogTitle>
         </DialogHeader>
@@ -160,67 +128,9 @@ export default function CarPhotoUpload({ carId, carMake, carModel, carYear, onUp
             )}
           </div>
 
-          <div>
-            <Label htmlFor="caption">Descripción</Label>
-            <Textarea
-              id="caption"
-              placeholder="Describe tu auto o la foto..."
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
-              className="mt-1"
-            />
-          </div>
-
-          <div>
-            <Label>Tags</Label>
-            <div className="flex gap-2 mt-1">
-              <Input
-                placeholder="Agregar tag..."
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
-              />
-              <Button type="button" variant="outline" onClick={addTag}>
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {tags.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="cursor-pointer" onClick={() => removeTag(tag)}>
-                    {tag}
-                    <X className="w-3 h-3 ml-1" />
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div>
-            <div className="flex justify-between items-center">
-              <Label>Especificaciones</Label>
-              <Button type="button" variant="outline" size="sm" onClick={addSpec}>
-                <Plus className="w-4 h-4 mr-1" />
-                Agregar spec
-              </Button>
-            </div>
-            {specs.map((spec, index) => (
-              <div key={index} className="flex gap-2 mt-2">
-                <Input
-                  placeholder="Nombre (ej: Motor)"
-                  value={spec.key}
-                  onChange={(e) => updateSpec(index, e.target.value, spec.value)}
-                />
-                <Input
-                  placeholder="Valor (ej: V8 5.0L)"
-                  value={spec.value}
-                  onChange={(e) => updateSpec(index, spec.key, e.target.value)}
-                />
-                <Button type="button" variant="outline" size="sm" onClick={() => removeSpec(index)}>
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-            ))}
+          <div className="text-sm text-muted-foreground">
+            Las fotos se subirán automáticamente con la información de tu auto: {carMake} {carModel} {carYear}
+            {carDescription && ` - ${carDescription}`}
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
