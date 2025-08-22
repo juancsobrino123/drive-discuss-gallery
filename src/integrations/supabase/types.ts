@@ -361,7 +361,7 @@ export type Database = {
         Row: {
           caption: string | null
           created_at: string
-          event_id: string
+          event_id: string | null
           favorites_count: number | null
           id: string
           is_thumbnail: boolean
@@ -377,7 +377,7 @@ export type Database = {
         Insert: {
           caption?: string | null
           created_at?: string
-          event_id: string
+          event_id?: string | null
           favorites_count?: number | null
           id?: string
           is_thumbnail?: boolean
@@ -393,7 +393,7 @@ export type Database = {
         Update: {
           caption?: string | null
           created_at?: string
-          event_id?: string
+          event_id?: string | null
           favorites_count?: number | null
           id?: string
           is_thumbnail?: boolean
@@ -407,13 +407,6 @@ export type Database = {
           user_car_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "photos_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "photos_user_car_id_fkey"
             columns: ["user_car_id"]
