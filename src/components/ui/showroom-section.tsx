@@ -49,7 +49,8 @@ export default function ShowroomSection() {
   const loadShowroomPhotos = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      // Get photos and user cars
+      const { data: photosData, error } = await supabase
         .from("photos")
         .select(`
           id,
@@ -67,13 +68,6 @@ export default function ShowroomSection() {
             model,
             year,
             description
-          ),
-          uploader:profiles!uploaded_by (
-            id,
-            username,
-            avatar_url,
-            level,
-            privacy_settings
           )
         `)
         .is("event_id", null)
@@ -82,22 +76,53 @@ export default function ShowroomSection() {
 
       if (error) throw error;
 
-      // Filter photos based on privacy settings
-      const filteredData = (data || []).filter((photo: any) => {
-        const privacySettings = photo.uploader?.privacy_settings || {};
+      if (!photosData || photosData.length === 0) {
+        setPhotos([]);
+        setPhotoUrls({});
+        return;
+      }
+
+      // Get unique user IDs
+      const userIds = [...new Set(photosData.map(photo => photo.uploaded_by))];
+      
+      // Get user profiles separately
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select(`
+          id,
+          username,
+          avatar_url,
+          level,
+          privacy_settings
+        `)
+        .in('id', userIds);
+
+      // Create a map of user profiles
+      const profilesMap = new Map();
+      (profilesData || []).forEach(profile => {
+        profilesMap.set(profile.id, profile);
+      });
+
+      // Filter photos based on privacy settings and map with profiles
+      const filteredData = photosData.filter((photo: any) => {
+        const userProfile = profilesMap.get(photo.uploaded_by);
+        const privacySettings = userProfile?.privacy_settings || {};
         return privacySettings.show_cars !== false; // Show if setting is true or undefined
       });
 
-      setPhotos(filteredData.map((photo: any) => ({
-        ...photo,
-        specs: (photo.specs as Record<string, string>) || {},
-        uploader: photo.uploader ? {
-          id: photo.uploader.id,
-          username: photo.uploader.username,
-          avatar_url: photo.uploader.avatar_url,
-          level: photo.uploader.level,
-        } : null
-      })));
+      setPhotos(filteredData.map((photo: any) => {
+        const userProfile = profilesMap.get(photo.uploaded_by);
+        return {
+          ...photo,
+          specs: (photo.specs as Record<string, string>) || {},
+          uploader: userProfile ? {
+            id: userProfile.id,
+            username: userProfile.username,
+            avatar_url: userProfile.avatar_url,
+            level: userProfile.level,
+          } : null
+        };
+      }));
 
       // Load thumbnail URLs
       const newUrls: Record<string, string> = {};

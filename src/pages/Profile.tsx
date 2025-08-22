@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import ProfileCarsSection from "@/components/ui/profile-cars-section";
 
 function setMeta(name: string, content: string) {
   let tag = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
@@ -266,6 +267,9 @@ const Profile = () => {
               </div>
             </div>
           )}
+
+          {/* My Cars */}
+          <ProfileCarsSection userId={user?.id || ''} />
 
           {/* Action Buttons */}
           <div className="flex gap-4 pt-4">
