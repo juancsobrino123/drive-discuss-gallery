@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Car, MapPin, Trophy, Star, Calendar, Heart, Eye, ArrowLeft, MessageCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+import ProfileCarsSection from '@/components/ui/profile-cars-section';
 
 interface UserProfile {
   id: string;
@@ -318,41 +319,8 @@ export default function Showroom() {
           <TabsContent value="garage" className="space-y-6">
             {showCars ? (
               <>
-                {/* Current Cars */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Car className="w-5 h-5" />
-                      Autos Actuales
-                    </CardTitle>
-                    <CardDescription>
-                      Los autos que {isOwnProfile ? 'tienes' : 'tiene'} actualmente
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {currentCars.length === 0 ? (
-                      <p className="text-muted-foreground text-center py-8">
-                        {isOwnProfile ? 'No has agregado autos aún' : 'No ha agregado autos aún'}
-                      </p>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {currentCars.map((car) => (
-                          <Card key={car.id} className="bg-muted/50">
-                            <CardContent className="p-4">
-                              <h3 className="font-semibold text-lg">
-                                {car.make} {car.model}
-                              </h3>
-                              <p className="text-muted-foreground">{car.year}</p>
-                              {car.description && (
-                                <p className="text-sm mt-2">{car.description}</p>
-                              )}
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                {/* Current Cars with Photos */}
+                <ProfileCarsSection userId={userId!} />
 
                 {/* Favorite Cars */}
                 <Card>
