@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Share, Copy, Check, Facebook, Twitter, Linkedin, MessageCircle } from "lucide-react";
+import { Share, Copy, Check, Facebook, Linkedin, MessageCircle, X } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -117,7 +117,7 @@ const ShareButton = ({
           Facebook
         </DropdownMenuItem>
         <DropdownMenuItem onClick={shareToX} className="cursor-pointer">
-          <Twitter className="h-4 w-4 mr-2" />
+          <X className="h-4 w-4 mr-2" />
           X (Twitter)
         </DropdownMenuItem>
         <DropdownMenuItem onClick={shareToWhatsApp} className="cursor-pointer">

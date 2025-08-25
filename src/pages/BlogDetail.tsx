@@ -99,46 +99,48 @@ const BlogDetail = () => {
     setPost(data);
     document.title = `${data.title} — AUTODEBATE`;
     
-    // Update Open Graph meta tags with blog post data
-    const addMetaTag = (property: string, content: string) => {
-      const existingTag = document.querySelector(`meta[property="${property}"]`);
+    // Update Open Graph meta tags with blog post data - force override existing tags
+    const updateMetaTag = (property: string, content: string) => {
+      let existingTag = document.querySelector(`meta[property="${property}"]`);
       if (existingTag) {
-        existingTag.setAttribute('content', content);
-      } else {
-        const meta = document.createElement('meta');
-        meta.setAttribute('property', property);
-        meta.setAttribute('content', content);
-        document.head.appendChild(meta);
+        existingTag.remove();
       }
+      const meta = document.createElement('meta');
+      meta.setAttribute('property', property);
+      meta.setAttribute('content', content);
+      document.head.appendChild(meta);
     };
 
-    addMetaTag('og:title', data.title);
-    addMetaTag('og:description', data.excerpt || data.title);
-    addMetaTag('og:url', `${window.location.origin}/blog/${data.id}`);
+    const updateTwitterMetaTag = (name: string, content: string) => {
+      let existingTag = document.querySelector(`meta[name="${name}"]`);
+      if (existingTag) {
+        existingTag.remove();
+      }
+      const meta = document.createElement('meta');
+      meta.setAttribute('name', name);
+      meta.setAttribute('content', content);
+      document.head.appendChild(meta);
+    };
+
+    // Force update all meta tags by removing and recreating
+    updateMetaTag('og:title', data.title);
+    updateMetaTag('og:description', data.excerpt || data.title);
+    updateMetaTag('og:url', `${window.location.origin}/blog/${data.id}`);
+    updateMetaTag('og:type', 'article');
     
     if (data.featured_image) {
-      addMetaTag('og:image', data.featured_image);
-      addMetaTag('og:image:alt', data.title);
+      updateMetaTag('og:image', data.featured_image);
+      updateMetaTag('og:image:alt', data.title);
+      updateMetaTag('og:image:width', '1200');
+      updateMetaTag('og:image:height', '630');
     }
     
     // Twitter Card meta tags
-    const addTwitterMetaTag = (name: string, content: string) => {
-      const existingTag = document.querySelector(`meta[name="${name}"]`);
-      if (existingTag) {
-        existingTag.setAttribute('content', content);
-      } else {
-        const meta = document.createElement('meta');
-        meta.setAttribute('name', name);
-        meta.setAttribute('content', content);
-        document.head.appendChild(meta);
-      }
-    };
-
-    addTwitterMetaTag('twitter:card', 'summary_large_image');
-    addTwitterMetaTag('twitter:title', data.title);
-    addTwitterMetaTag('twitter:description', data.excerpt || data.title);
+    updateTwitterMetaTag('twitter:card', 'summary_large_image');
+    updateTwitterMetaTag('twitter:title', data.title);
+    updateTwitterMetaTag('twitter:description', data.excerpt || data.title);
     if (data.featured_image) {
-      addTwitterMetaTag('twitter:image', data.featured_image);
+      updateTwitterMetaTag('twitter:image', data.featured_image);
     }
   };
 
