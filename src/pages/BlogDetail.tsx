@@ -48,6 +48,33 @@ const BlogDetail = () => {
 
   useEffect(() => {
     document.title = "Post Details — AUTODEBATE";
+    
+    // Add Open Graph meta tags for better social sharing
+    const addMetaTag = (property: string, content: string) => {
+      const existingTag = document.querySelector(`meta[property="${property}"]`);
+      if (existingTag) {
+        existingTag.setAttribute('content', content);
+      } else {
+        const meta = document.createElement('meta');
+        meta.setAttribute('property', property);
+        meta.setAttribute('content', content);
+        document.head.appendChild(meta);
+      }
+    };
+
+    // Default meta tags
+    addMetaTag('og:site_name', 'AUTODEBATE');
+    addMetaTag('og:type', 'article');
+    
+    return () => {
+      // Cleanup meta tags when component unmounts
+      const metaTags = document.querySelectorAll('meta[property^="og:"]');
+      metaTags.forEach(tag => {
+        if (tag.getAttribute('property') !== 'og:site_name') {
+          tag.remove();
+        }
+      });
+    };
   }, []);
 
   const fetchPost = async () => {
@@ -71,6 +98,48 @@ const BlogDetail = () => {
 
     setPost(data);
     document.title = `${data.title} — AUTODEBATE`;
+    
+    // Update Open Graph meta tags with blog post data
+    const addMetaTag = (property: string, content: string) => {
+      const existingTag = document.querySelector(`meta[property="${property}"]`);
+      if (existingTag) {
+        existingTag.setAttribute('content', content);
+      } else {
+        const meta = document.createElement('meta');
+        meta.setAttribute('property', property);
+        meta.setAttribute('content', content);
+        document.head.appendChild(meta);
+      }
+    };
+
+    addMetaTag('og:title', data.title);
+    addMetaTag('og:description', data.excerpt || data.title);
+    addMetaTag('og:url', `${window.location.origin}/blog/${data.id}`);
+    
+    if (data.featured_image) {
+      addMetaTag('og:image', data.featured_image);
+      addMetaTag('og:image:alt', data.title);
+    }
+    
+    // Twitter Card meta tags
+    const addTwitterMetaTag = (name: string, content: string) => {
+      const existingTag = document.querySelector(`meta[name="${name}"]`);
+      if (existingTag) {
+        existingTag.setAttribute('content', content);
+      } else {
+        const meta = document.createElement('meta');
+        meta.setAttribute('name', name);
+        meta.setAttribute('content', content);
+        document.head.appendChild(meta);
+      }
+    };
+
+    addTwitterMetaTag('twitter:card', 'summary_large_image');
+    addTwitterMetaTag('twitter:title', data.title);
+    addTwitterMetaTag('twitter:description', data.excerpt || data.title);
+    if (data.featured_image) {
+      addTwitterMetaTag('twitter:image', data.featured_image);
+    }
   };
 
   const fetchComments = async () => {

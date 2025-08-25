@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Share, Copy, Check, Facebook, Twitter, Linkedin } from "lucide-react";
+import { Share, Copy, Check, Facebook, Twitter, Linkedin, MessageCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -75,9 +75,14 @@ const ShareButton = ({
     window.open(facebookUrl, '_blank', 'width=600,height=400');
   };
 
-  const shareToTwitter = () => {
-    const twitterUrl = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}&via=autodebate`;
-    window.open(twitterUrl, '_blank', 'width=600,height=400');
+  const shareToX = () => {
+    const xUrl = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}&via=autodebate`;
+    window.open(xUrl, '_blank', 'width=600,height=400');
+  };
+
+  const shareToWhatsApp = () => {
+    const whatsappUrl = `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   const shareToLinkedIn = () => {
@@ -111,9 +116,13 @@ const ShareButton = ({
           <Facebook className="h-4 w-4 mr-2 text-blue-600" />
           Facebook
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={shareToTwitter} className="cursor-pointer">
-          <Twitter className="h-4 w-4 mr-2 text-blue-400" />
-          Twitter
+        <DropdownMenuItem onClick={shareToX} className="cursor-pointer">
+          <Twitter className="h-4 w-4 mr-2" />
+          X (Twitter)
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={shareToWhatsApp} className="cursor-pointer">
+          <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
+          WhatsApp
         </DropdownMenuItem>
         <DropdownMenuItem onClick={shareToLinkedIn} className="cursor-pointer">
           <Linkedin className="h-4 w-4 mr-2 text-blue-700" />
