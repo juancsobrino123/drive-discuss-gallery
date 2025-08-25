@@ -23,6 +23,7 @@ interface CarPhotoManagerProps {
   carModel: string;
   carYear?: number;
   onPhotosUpdated?: () => void;
+  canEdit?: boolean;
 }
 
 export default function CarPhotoManager({ 
@@ -30,7 +31,8 @@ export default function CarPhotoManager({
   carMake, 
   carModel, 
   carYear,
-  onPhotosUpdated 
+  onPhotosUpdated,
+  canEdit = false
 }: CarPhotoManagerProps) {
   const { toast } = useToast();
   const [photos, setPhotos] = useState<CarPhoto[]>([]);
@@ -187,36 +189,38 @@ export default function CarPhotoManager({
                 className="w-full h-24 object-cover rounded-lg"
                 loading="lazy"
               />
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>¿Eliminar foto?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Esta acción no se puede deshacer. La foto será eliminada permanentemente.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => handleDeletePhoto(photo.id, photo.storage_path, photo.thumbnail_path || undefined)}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              {canEdit && (
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="h-8 w-8 p-0"
                       >
-                        Eliminar
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>¿Eliminar foto?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Esta acción no se puede deshacer. La foto será eliminada permanentemente.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDeletePhoto(photo.id, photo.storage_path, photo.thumbnail_path || undefined)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Eliminar
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -228,7 +232,7 @@ export default function CarPhotoManager({
       )}
 
       {/* Add Photos Button */}
-      {photos.length < MAX_PHOTOS && (
+      {canEdit && photos.length < MAX_PHOTOS && (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" size="sm" className="w-full">
@@ -283,7 +287,7 @@ export default function CarPhotoManager({
         </Dialog>
       )}
 
-      {photos.length >= MAX_PHOTOS && (
+      {canEdit && photos.length >= MAX_PHOTOS && (
         <Badge variant="secondary" className="w-full justify-center">
           Máximo de fotos alcanzado ({MAX_PHOTOS}/{MAX_PHOTOS})
         </Badge>

@@ -320,7 +320,7 @@ export default function Showroom() {
             {showCars ? (
               <>
                 {/* Current Cars with Photos */}
-                <ProfileCarsSection userId={userId!} />
+                <ProfileCarsSection userId={userId!} canEdit={isOwnProfile} />
 
                 {/* Favorite Cars */}
                 <Card>

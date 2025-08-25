@@ -18,9 +18,10 @@ interface UserCar {
 
 interface ProfileCarsSectionProps {
   userId: string;
+  canEdit?: boolean;
 }
 
-export default function ProfileCarsSection({ userId }: ProfileCarsSectionProps) {
+export default function ProfileCarsSection({ userId, canEdit = false }: ProfileCarsSectionProps) {
   const [cars, setCars] = useState<UserCar[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -104,6 +105,7 @@ export default function ProfileCarsSection({ userId }: ProfileCarsSectionProps) 
                 carModel={car.model}
                 carYear={car.year || undefined}
                 onPhotosUpdated={loadUserCars}
+                canEdit={canEdit}
               />
             </CardContent>
           </Card>
