@@ -49,31 +49,27 @@ const BlogDetail = () => {
   useEffect(() => {
     document.title = "Post Details — AUTODEBATE";
     
-    // Add Open Graph meta tags for better social sharing
-    const addMetaTag = (property: string, content: string) => {
-      const existingTag = document.querySelector(`meta[property="${property}"]`);
-      if (existingTag) {
-        existingTag.setAttribute('content', content);
-      } else {
-        const meta = document.createElement('meta');
-        meta.setAttribute('property', property);
-        meta.setAttribute('content', content);
-        document.head.appendChild(meta);
-      }
+    // Clear all existing Open Graph and Twitter meta tags first
+    const clearMetaTags = () => {
+      // Remove all existing og: meta tags
+      const ogTags = document.querySelectorAll('meta[property^="og:"]');
+      ogTags.forEach(tag => tag.remove());
+      
+      // Remove all existing twitter: meta tags
+      const twitterTags = document.querySelectorAll('meta[name^="twitter:"]');
+      twitterTags.forEach(tag => tag.remove());
     };
 
-    // Default meta tags
-    addMetaTag('og:site_name', 'AUTODEBATE');
-    addMetaTag('og:type', 'article');
+    clearMetaTags();
+    
+    // Set default meta tags
+    const defaultMeta = document.createElement('meta');
+    defaultMeta.setAttribute('property', 'og:site_name');
+    defaultMeta.setAttribute('content', 'AUTODEBATE');
+    document.head.appendChild(defaultMeta);
     
     return () => {
-      // Cleanup meta tags when component unmounts
-      const metaTags = document.querySelectorAll('meta[property^="og:"]');
-      metaTags.forEach(tag => {
-        if (tag.getAttribute('property') !== 'og:site_name') {
-          tag.remove();
-        }
-      });
+      // Cleanup is handled by the clearMetaTags function on each load
     };
   }, []);
 
@@ -99,49 +95,70 @@ const BlogDetail = () => {
     setPost(data);
     document.title = `${data.title} — AUTODEBATE`;
     
-    // Update Open Graph meta tags with blog post data - force override existing tags
-    const updateMetaTag = (property: string, content: string) => {
-      let existingTag = document.querySelector(`meta[property="${property}"]`);
-      if (existingTag) {
-        existingTag.remove();
-      }
+    // Clear all existing meta tags first
+    const clearAllMetaTags = () => {
+      const ogTags = document.querySelectorAll('meta[property^="og:"]');
+      ogTags.forEach(tag => tag.remove());
+      const twitterTags = document.querySelectorAll('meta[name^="twitter:"]');
+      twitterTags.forEach(tag => tag.remove());
+    };
+
+    clearAllMetaTags();
+    
+    // Create meta tags function
+    const createMetaTag = (property: string, content: string) => {
       const meta = document.createElement('meta');
       meta.setAttribute('property', property);
       meta.setAttribute('content', content);
       document.head.appendChild(meta);
     };
 
-    const updateTwitterMetaTag = (name: string, content: string) => {
-      let existingTag = document.querySelector(`meta[name="${name}"]`);
-      if (existingTag) {
-        existingTag.remove();
-      }
+    const createTwitterMetaTag = (name: string, content: string) => {
       const meta = document.createElement('meta');
       meta.setAttribute('name', name);
       meta.setAttribute('content', content);
       document.head.appendChild(meta);
     };
 
-    // Force update all meta tags by removing and recreating
-    updateMetaTag('og:title', data.title);
-    updateMetaTag('og:description', data.excerpt || data.title);
-    updateMetaTag('og:url', `${window.location.origin}/blog/${data.id}`);
-    updateMetaTag('og:type', 'article');
+    // Set all Open Graph meta tags
+    createMetaTag('og:site_name', 'AUTODEBATE');
+    createMetaTag('og:type', 'article');
+    createMetaTag('og:title', data.title);
+    createMetaTag('og:description', data.excerpt || data.content.substring(0, 160) + '...');
+    createMetaTag('og:url', `${window.location.origin}/blog/${data.id}`);
+    
+    // Add canonical URL
+    let canonicalLink = document.querySelector('link[rel="canonical"]');
+    if (canonicalLink) {
+      canonicalLink.remove();
+    }
+    canonicalLink = document.createElement('link');
+    canonicalLink.setAttribute('rel', 'canonical');
+    canonicalLink.setAttribute('href', `${window.location.origin}/blog/${data.id}`);
+    document.head.appendChild(canonicalLink);
     
     if (data.featured_image) {
-      updateMetaTag('og:image', data.featured_image);
-      updateMetaTag('og:image:alt', data.title);
-      updateMetaTag('og:image:width', '1200');
-      updateMetaTag('og:image:height', '630');
+      // Ensure the image URL is absolute
+      const imageUrl = data.featured_image.startsWith('http') 
+        ? data.featured_image 
+        : `${window.location.origin}${data.featured_image}`;
+      
+      createMetaTag('og:image', imageUrl);
+      createMetaTag('og:image:alt', data.title);
+      createMetaTag('og:image:width', '1200');
+      createMetaTag('og:image:height', '630');
+      createMetaTag('og:image:type', 'image/jpeg');
+      
+      // Twitter Card meta tags
+      createTwitterMetaTag('twitter:card', 'summary_large_image');
+      createTwitterMetaTag('twitter:image', imageUrl);
+    } else {
+      createTwitterMetaTag('twitter:card', 'summary');
     }
     
-    // Twitter Card meta tags
-    updateTwitterMetaTag('twitter:card', 'summary_large_image');
-    updateTwitterMetaTag('twitter:title', data.title);
-    updateTwitterMetaTag('twitter:description', data.excerpt || data.title);
-    if (data.featured_image) {
-      updateTwitterMetaTag('twitter:image', data.featured_image);
-    }
+    createTwitterMetaTag('twitter:title', data.title);
+    createTwitterMetaTag('twitter:description', data.excerpt || data.content.substring(0, 160) + '...');
+    createTwitterMetaTag('twitter:site', '@autodebate');
   };
 
   const fetchComments = async () => {
