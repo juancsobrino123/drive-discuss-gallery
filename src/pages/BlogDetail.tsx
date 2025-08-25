@@ -138,20 +138,36 @@ const BlogDetail = () => {
     document.head.appendChild(canonicalLink);
     
     if (data.featured_image) {
-      // Ensure the image URL is absolute
-      const imageUrl = data.featured_image.startsWith('http') 
-        ? data.featured_image 
-        : `${window.location.origin}${data.featured_image}`;
+      // Ensure the image URL is absolute and properly formatted
+      let imageUrl = data.featured_image;
+      
+      // If it's a relative URL, make it absolute
+      if (!imageUrl.startsWith('http')) {
+        if (imageUrl.startsWith('/')) {
+          imageUrl = `${window.location.origin}${imageUrl}`;
+        } else {
+          imageUrl = `${window.location.origin}/${imageUrl}`;
+        }
+      }
+      
+      console.log('Setting blog image meta tag:', imageUrl);
       
       createMetaTag('og:image', imageUrl);
       createMetaTag('og:image:alt', data.title);
       createMetaTag('og:image:width', '1200');
       createMetaTag('og:image:height', '630');
       createMetaTag('og:image:type', 'image/jpeg');
+      createMetaTag('og:image:secure_url', imageUrl);
       
       // Twitter Card meta tags
       createTwitterMetaTag('twitter:card', 'summary_large_image');
       createTwitterMetaTag('twitter:image', imageUrl);
+      createTwitterMetaTag('twitter:image:alt', data.title);
+      
+      // Additional meta for better social sharing
+      createMetaTag('article:author', 'AUTODEBATE Team');
+      createMetaTag('article:published_time', new Date(data.created_at).toISOString());
+      createMetaTag('article:modified_time', new Date(data.updated_at).toISOString());
     } else {
       createTwitterMetaTag('twitter:card', 'summary');
     }
