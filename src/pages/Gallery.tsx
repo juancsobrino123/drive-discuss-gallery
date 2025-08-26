@@ -9,7 +9,7 @@ const Gallery = () => {
   const [activeTab, setActiveTab] = useState("events");
 
   useEffect(() => {
-    const title = "Galería de Eventos | AUTODEBATE";
+    const title = "Galería | AUTODEBATE";
     const description = t('gallery.subheading');
     const canonicalUrl = typeof window !== 'undefined' ? `${window.location.origin}/galeria` : '/galeria';
 
@@ -39,7 +39,7 @@ const Gallery = () => {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: "Galería de Eventos AUTODEBATE",
+    name: "Galería AUTODEBATE",
     description: t('gallery.subheading'),
     url: typeof window !== 'undefined' ? `${window.location.origin}/galeria` : '/galeria',
   };
@@ -49,7 +49,7 @@ const Gallery = () => {
       <header className="pt-28 pb-8 border-b border-border bg-gradient-to-b from-background/50 to-background">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground font-brand">
-            Galería de Eventos <span className="text-primary font-brand">AUTODEBATE</span>
+            Galería <span className="text-primary font-brand">AUTODEBATE</span>
           </h1>
           <p className="mt-4 text-muted-foreground max-w-3xl mx-auto">
             {t('gallery.subheading')}
