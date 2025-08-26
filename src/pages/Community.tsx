@@ -194,7 +194,7 @@ export default function Community() {
 
       {/* Header */}
       <header className="bg-gradient-to-r from-primary/10 to-secondary/10 border-b">
-        <div className="container mx-auto px-4 py-12">
+        <div className="container mx-auto px-4 pt-20 pb-12">
           <h1 className="text-4xl font-bold text-center mb-4">Comunidad AUTODEBATE</h1>
           <p className="text-xl text-muted-foreground text-center max-w-2xl mx-auto">
             Conecta con otros apasionados por los autos. Encuentra usuarios de tu ciudad, 
