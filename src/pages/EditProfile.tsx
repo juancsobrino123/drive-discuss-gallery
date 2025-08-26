@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import CarPhotoUpload from "@/components/ui/car-photo-upload";
+import CarPhotoManager from "@/components/ui/car-photo-manager";
 
 interface UserCar {
   id?: string;
@@ -439,52 +439,44 @@ const EditProfile = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               {currentCars.map((car, index) => (
-                <div key={index} className="flex gap-4 items-end p-4 border rounded-lg">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1">
-                    <div>
-                      <Label>Marca</Label>
-                      <Input
-                        value={car.make}
-                        onChange={(e) => updateCurrentCar(index, 'make', e.target.value)}
-                        placeholder="Ford, Honda, BMW..."
-                      />
+                <div key={index} className="space-y-4 p-4 border rounded-lg">
+                  <div className="flex gap-4 items-end">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1">
+                      <div>
+                        <Label>Marca</Label>
+                        <Input
+                          value={car.make}
+                          onChange={(e) => updateCurrentCar(index, 'make', e.target.value)}
+                          placeholder="Ford, Honda, BMW..."
+                        />
+                      </div>
+                      <div>
+                        <Label>Modelo</Label>
+                        <Input
+                          value={car.model}
+                          onChange={(e) => updateCurrentCar(index, 'model', e.target.value)}
+                          placeholder="Mustang, Civic..."
+                        />
+                      </div>
+                      <div>
+                        <Label>Año</Label>
+                        <Input
+                          type="number"
+                          value={car.year}
+                          onChange={(e) => updateCurrentCar(index, 'year', parseInt(e.target.value))}
+                          min="1900"
+                          max={new Date().getFullYear() + 1}
+                        />
+                      </div>
+                      <div>
+                        <Label>Descripción</Label>
+                        <Input
+                          value={car.description || ''}
+                          onChange={(e) => updateCurrentCar(index, 'description', e.target.value)}
+                          placeholder="Opcional..."
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <Label>Modelo</Label>
-                      <Input
-                        value={car.model}
-                        onChange={(e) => updateCurrentCar(index, 'model', e.target.value)}
-                        placeholder="Mustang, Civic..."
-                      />
-                    </div>
-                    <div>
-                      <Label>Año</Label>
-                      <Input
-                        type="number"
-                        value={car.year}
-                        onChange={(e) => updateCurrentCar(index, 'year', parseInt(e.target.value))}
-                        min="1900"
-                        max={new Date().getFullYear() + 1}
-                      />
-                    </div>
-                    <div>
-                      <Label>Descripción</Label>
-                      <Input
-                        value={car.description || ''}
-                        onChange={(e) => updateCurrentCar(index, 'description', e.target.value)}
-                        placeholder="Opcional..."
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    {car.id && (
-                      <CarPhotoUpload
-                        carId={car.id}
-                        carMake={car.make}
-                        carModel={car.model}
-                        carYear={car.year}
-                      />
-                    )}
                     <Button
                       variant="destructive"
                       size="sm"
@@ -492,6 +484,25 @@ const EditProfile = () => {
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
+                  </div>
+                  
+                  {/* Photo Management Section */}
+                  <div className="border-t pt-4">
+                    <Label className="text-sm font-medium mb-2 block">Fotos del Auto</Label>
+                    {car.id && car.make && car.model ? (
+                      <CarPhotoManager
+                        carId={car.id}
+                        carMake={car.make}
+                        carModel={car.model}
+                        carYear={car.year}
+                        onPhotosUpdated={loadUserCars}
+                        canEdit={true}
+                      />
+                    ) : (
+                      <div className="text-center py-4 text-muted-foreground text-sm">
+                        Guarda los datos del auto para poder agregar fotos
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
