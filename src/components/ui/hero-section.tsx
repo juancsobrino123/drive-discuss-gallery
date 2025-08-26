@@ -43,12 +43,8 @@ const HeroSection = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-scale-in">
-            <Button variant="hero" size="lg" className="text-lg px-8 py-4">
-              <Play className="w-5 h-5 mr-2" />
-              {t('hero.watch')}
-            </Button>
             <Button 
-              variant="platform" 
+              variant="hero" 
               size="lg" 
               className="text-lg px-8 py-4"
               asChild
@@ -58,9 +54,20 @@ const HeroSection = () => {
                 target="_blank" 
                 rel="noopener noreferrer"
               >
+                <Play className="w-5 h-5 mr-2" />
+                {t('hero.watch')}
+              </a>
+            </Button>
+            <Button 
+              variant="platform" 
+              size="lg" 
+              className="text-lg px-8 py-4"
+              asChild
+            >
+              <Link to="/galeria">
                 <Camera className="w-5 h-5 mr-2" />
                 {t('hero.browseGallery')}
-              </a>
+              </Link>
             </Button>
           </div>
 
