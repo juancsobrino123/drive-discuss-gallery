@@ -51,9 +51,6 @@ const Gallery = () => {
           <h1 className="text-4xl md:text-5xl font-bold text-foreground font-brand">
             Galería <span className="text-primary font-brand">AUTODEBATE</span>
           </h1>
-          <p className="mt-4 text-muted-foreground max-w-3xl mx-auto">
-            {t('gallery.subheading')}
-          </p>
         </div>
       </header>
 
