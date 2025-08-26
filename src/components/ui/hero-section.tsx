@@ -47,9 +47,20 @@ const HeroSection = () => {
               <Play className="w-5 h-5 mr-2" />
               {t('hero.watch')}
             </Button>
-            <Button variant="platform" size="lg" className="text-lg px-8 py-4">
-              <Camera className="w-5 h-5 mr-2" />
-              {t('hero.browseGallery')}
+            <Button 
+              variant="platform" 
+              size="lg" 
+              className="text-lg px-8 py-4"
+              asChild
+            >
+              <a 
+                href="https://www.youtube.com/@autodebate" 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                <Camera className="w-5 h-5 mr-2" />
+                {t('hero.browseGallery')}
+              </a>
             </Button>
           </div>
 
