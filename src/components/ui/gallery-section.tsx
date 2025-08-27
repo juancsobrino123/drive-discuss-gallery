@@ -277,6 +277,7 @@ const GallerySection = () => {
   };
 
   // Show loading state while auth is loading - but allow non-auth users to see content
+  console.log('Gallery auth check:', { user, authLoading, canCreateEvent, canUpload, canDownload });
   if (authLoading) {
     return (
       <div className="flex justify-center items-center py-8">

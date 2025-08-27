@@ -71,7 +71,9 @@ export default function Showroom() {
   const isOwnProfile = user?.id === userId;
 
   // Show login message for non-authenticated users
+  console.log('Showroom auth check:', { user, authLoading, userId });
   if (!authLoading && !user) {
+    console.log('Showing login message for showroom');
     return (
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-20">
