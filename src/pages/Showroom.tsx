@@ -59,7 +59,7 @@ interface Photo {
 
 export default function Showroom() {
   const { userId } = useParams<{ userId: string }>();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [currentCars, setCurrentCars] = useState<UserCar[]>([]);
   const [favoriteCars, setFavoriteCars] = useState<UserCar[]>([]);
@@ -69,6 +69,29 @@ export default function Showroom() {
   const [thumbnailUrls, setThumbnailUrls] = useState<Record<string, string>>({});
 
   const isOwnProfile = user?.id === userId;
+
+  // Show login message for non-authenticated users
+  if (!authLoading && !user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-20">
+          <div className="text-center max-w-md mx-auto">
+            <h1 className="text-3xl font-bold text-foreground mb-4">
+              Inicia sesión para ver el showroom
+            </h1>
+            <p className="text-muted-foreground mb-6">
+              Necesitas una cuenta para explorar los showrooms de la comunidad.
+            </p>
+            <Link to="/auth">
+              <Button size="lg" className="w-full">
+                Iniciar sesión
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (userId) {
