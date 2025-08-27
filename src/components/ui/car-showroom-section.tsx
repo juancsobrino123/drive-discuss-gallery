@@ -37,7 +37,7 @@ interface CarWithPhotos {
 
 export default function CarShowroomSection() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [cars, setCars] = useState<CarWithPhotos[]>([]);
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState<Record<string, number>>({});
@@ -46,6 +46,26 @@ export default function CarShowroomSection() {
   useEffect(() => {
     loadShowroomCars();
   }, []);
+
+  // Show login message for non-authenticated users
+  if (!authLoading && !user) {
+    return (
+      <div className="text-center py-12">
+        <Car className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+        <h3 className="text-xl font-semibold text-foreground mb-2">
+          Inicia sesión para ver el showroom
+        </h3>
+        <p className="text-muted-foreground mb-4">
+          Necesitas una cuenta para explorar el showroom de la comunidad.
+        </p>
+        <Link to="/auth">
+          <Button variant="default">
+            Iniciar sesión
+          </Button>
+        </Link>
+      </div>
+    );
+  }
 
   const loadShowroomCars = async () => {
     try {
