@@ -276,7 +276,7 @@ const GallerySection = () => {
     }
   };
 
-  // Show loading state while auth is loading
+  // Show loading state while auth is loading - but allow non-auth users to see content
   if (authLoading) {
     return (
       <div className="flex justify-center items-center py-8">
