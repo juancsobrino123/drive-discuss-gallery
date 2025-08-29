@@ -43,30 +43,6 @@ export default function CarShowroomSection() {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadShowroomCars();
-  }, []);
-
-  // Show login message for non-authenticated users
-  if (!authLoading && !user) {
-    return (
-      <div className="text-center py-12">
-        <Car className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-        <h3 className="text-xl font-semibold text-foreground mb-2">
-          Inicia sesión para ver el showroom
-        </h3>
-        <p className="text-muted-foreground mb-4">
-          Necesitas una cuenta para explorar el showroom de la comunidad.
-        </p>
-        <Link to="/auth">
-          <Button variant="default">
-            Iniciar sesión
-          </Button>
-        </Link>
-      </div>
-    );
-  }
-
   const loadShowroomCars = async () => {
     try {
       setLoading(true);
@@ -189,6 +165,30 @@ export default function CarShowroomSection() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadShowroomCars();
+  }, []);
+
+  // Show login message for non-authenticated users
+  if (!authLoading && !user) {
+    return (
+      <div className="text-center py-12">
+        <Car className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+        <h3 className="text-xl font-semibold text-foreground mb-2">
+          Inicia sesión para ver el showroom
+        </h3>
+        <p className="text-muted-foreground mb-4">
+          Necesitas una cuenta para explorar el showroom de la comunidad.
+        </p>
+        <Link to="/auth">
+          <Button variant="default">
+            Iniciar sesión
+          </Button>
+        </Link>
+      </div>
+    );
+  }
 
   const toggleLike = async (photoId: string) => {
     if (!user) {
