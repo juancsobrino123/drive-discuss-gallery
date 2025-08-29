@@ -279,6 +279,11 @@ export default function CarShowroomSection() {
           const currentIndex = currentPhotoIndex[car.id] || 0;
           const currentPhoto = car.photos[currentIndex];
           
+          // Safety check - skip if no photos or currentPhoto is undefined
+          if (!car.photos.length || !currentPhoto) {
+            return null;
+          }
+          
           return (
             <Card key={car.id} className="overflow-hidden hover:shadow-royal transition-all duration-300">
               <div className="relative">
