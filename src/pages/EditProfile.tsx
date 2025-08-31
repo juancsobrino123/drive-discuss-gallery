@@ -62,7 +62,25 @@ const EditProfile = () => {
     if (profile) {
       setUsername(profile.username || '');
       setBio((profile as any).bio || '');
-      setBirthDate((profile as any).birth_date || '');
+      
+      // Format birth date properly to avoid timezone issues
+      const birthDateValue = (profile as any).birth_date;
+      if (birthDateValue) {
+        // If it's already in YYYY-MM-DD format, use it directly
+        if (typeof birthDateValue === 'string' && birthDateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          setBirthDate(birthDateValue);
+        } else {
+          // Convert to local date string in YYYY-MM-DD format
+          const date = new Date(birthDateValue);
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          setBirthDate(`${year}-${month}-${day}`);
+        }
+      } else {
+        setBirthDate('');
+      }
+      
       setCity((profile as any).city || '');
       setCountry((profile as any).country || '');
       setAvatarUrl(profile.avatar_url || '');
