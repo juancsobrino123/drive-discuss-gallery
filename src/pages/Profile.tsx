@@ -214,7 +214,17 @@ const Profile = () => {
                 {profile?.birth_date && (
                   <div>
                     <span className="text-sm font-medium text-muted-foreground">Fecha de nacimiento:</span>
-                    <p className="text-foreground">{new Date(profile.birth_date).toLocaleDateString()}</p>
+                    <p className="text-foreground">
+                      {(() => {
+                        const birthDate = profile.birth_date;
+                        if (typeof birthDate === 'string' && birthDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                          // Format YYYY-MM-DD directly to avoid timezone issues
+                          const [year, month, day] = birthDate.split('-');
+                          return `${day}/${month}/${year}`;
+                        }
+                        return new Date(birthDate).toLocaleDateString();
+                      })()}
+                    </p>
                   </div>
                 )}
                 {(profile?.city || profile?.country) && (
