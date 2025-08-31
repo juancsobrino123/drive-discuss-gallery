@@ -20,6 +20,10 @@ import EditProfile from "./pages/EditProfile";
 import GalleryDetail from "./pages/GalleryDetail";
 import Community from "./pages/Community";
 import Showroom from "./pages/Showroom";
+import Messages from "./pages/Messages";
+import Groups from "./pages/Groups";
+import GroupDetail from "./pages/GroupDetail";
+import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +50,10 @@ const App = () => (
             <Route path="/edit-profile" element={<EditProfile />} />
             <Route path="/comunidad" element={<Community />} />
             <Route path="/showroom/:userId" element={<Showroom />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/groups" element={<Groups />} />
+            <Route path="/groups/:groupId" element={<GroupDetail />} />
+            <Route path="/admin" element={<Admin />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

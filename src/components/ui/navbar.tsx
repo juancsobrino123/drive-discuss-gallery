@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, profile, signOut, loading } = useAuth();
+  const { user, profile, signOut, loading, isAdmin } = useAuth();
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
 
@@ -86,12 +86,31 @@ const Navbar = () => {
               </DropdownMenuContent>
             </DropdownMenu>
             
-            <a
-              href="/comunidad"
-              className="text-muted-foreground hover:text-primary transition-colors duration-300 font-medium"
-            >
-              Comunidad
-            </a>
+            {/* Community Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors duration-300 font-medium">
+                Comunidad <ChevronDown className="h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-background border border-border z-50">
+                <DropdownMenuItem asChild>
+                  <a href="/comunidad" className="cursor-pointer text-foreground hover:text-primary">
+                    Explorar
+                  </a>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <a href="/groups" className="cursor-pointer text-foreground hover:text-primary">
+                    Grupos
+                  </a>
+                </DropdownMenuItem>
+                {user && (
+                  <DropdownMenuItem asChild>
+                    <a href="/messages" className="cursor-pointer text-foreground hover:text-primary">
+                      Mensajes
+                    </a>
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
             
             {navItems.slice(1).map((item) => (
               <a
@@ -128,6 +147,11 @@ const Navbar = () => {
       <Button variant="secondary" size="sm" asChild>
         <a href="/profile">{t('nav.profile')}</a>
       </Button>
+      {isAdmin && (
+        <Button variant="outline" size="sm" asChild>
+          <a href="/admin">Admin</a>
+        </Button>
+      )}
       <Button
         variant="ghost"
         size="sm"
@@ -197,6 +221,24 @@ const Navbar = () => {
         Comunidad
       </a>
       
+      <a
+        href="/groups"
+        className="text-muted-foreground hover:text-primary transition-colors duration-300 font-medium py-2"
+        onClick={() => setIsOpen(false)}
+      >
+        Grupos
+      </a>
+      
+      {user && (
+        <a
+          href="/messages"
+          className="text-muted-foreground hover:text-primary transition-colors duration-300 font-medium py-2"
+          onClick={() => setIsOpen(false)}
+        >
+          Mensajes
+        </a>
+      )}
+      
       {/* Mobile News Items */}
       <div className="border-t border-border pt-2 mt-2">
         <a
@@ -248,6 +290,11 @@ const Navbar = () => {
             <Button variant="secondary" size="sm" asChild>
               <a href="/profile" onClick={() => setIsOpen(false)}>{t('nav.profile')}</a>
             </Button>
+            {isAdmin && (
+              <Button variant="outline" size="sm" asChild>
+                <a href="/admin" onClick={() => setIsOpen(false)}>Admin</a>
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
