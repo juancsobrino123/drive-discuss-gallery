@@ -46,7 +46,7 @@ const Groups = () => {
 
   const loadGroups = async () => {
     try {
-      // Get all groups with membership info
+      // Get all groups
       const { data: groupsData, error: groupsError } = await supabase
         .from("groups")
         .select("*")
@@ -55,22 +55,26 @@ const Groups = () => {
       if (groupsError) throw groupsError;
 
       // Get user's memberships if authenticated
-      let membershipData = [];
+      let userMemberships = [];
       if (user) {
         const { data, error } = await supabase
           .from("group_members")
           .select("group_id, role")
           .eq("user_id", user.id);
 
-        if (error) throw error;
-        membershipData = data;
+        if (error) {
+          console.error("Error loading user memberships:", error);
+          // Don't throw error here, just continue without membership info
+        } else {
+          userMemberships = data || [];
+        }
       }
 
       // Combine data
       const groupsWithMembership = groupsData.map(group => ({
         ...group,
-        is_member: membershipData.some(m => m.group_id === group.id),
-        user_role: membershipData.find(m => m.group_id === group.id)?.role
+        is_member: userMemberships.some(m => m.group_id === group.id),
+        user_role: userMemberships.find(m => m.group_id === group.id)?.role
       }));
 
       setGroups(groupsWithMembership);
