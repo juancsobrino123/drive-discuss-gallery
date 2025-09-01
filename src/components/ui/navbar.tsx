@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
+import { Link } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -149,7 +150,7 @@ const Navbar = () => {
       </Button>
       {isAdmin && (
         <Button variant="outline" size="sm" asChild>
-          <a href="/admin">Admin</a>
+          <Link to="/admin">Admin</Link>
         </Button>
       )}
       <Button
@@ -290,11 +291,11 @@ const Navbar = () => {
             <Button variant="secondary" size="sm" asChild>
               <a href="/profile" onClick={() => setIsOpen(false)}>{t('nav.profile')}</a>
             </Button>
-            {isAdmin && (
-              <Button variant="outline" size="sm" asChild>
-                <a href="/admin" onClick={() => setIsOpen(false)}>Admin</a>
-              </Button>
-            )}
+             {isAdmin && (
+               <Button variant="outline" size="sm" asChild>
+                 <Link to="/admin" onClick={() => setIsOpen(false)}>Admin</Link>
+               </Button>
+             )}
             <Button
               variant="ghost"
               size="sm"
