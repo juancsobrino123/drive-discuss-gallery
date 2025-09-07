@@ -32,6 +32,10 @@ import {
   Pie,
   Cell
 } from "recharts";
+import { UserManagementTab } from "@/components/admin/UserManagementTab";
+import { BlogManagementTab } from "@/components/admin/BlogManagementTab";
+import { ForumManagementTab } from "@/components/admin/ForumManagementTab";
+import { ReportsManagementTab } from "@/components/admin/ReportsManagementTab";
 
 interface DashboardStats {
   totalUsers: number;
@@ -290,63 +294,28 @@ const Admin = () => {
 
         {/* Users Tab */}
         <TabsContent value="users">
-          <Card>
-            <CardHeader>
-              <CardTitle>Gestión de Usuarios</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Funcionalidad de gestión de usuarios en desarrollo...
-              </p>
-            </CardContent>
-          </Card>
+          <UserManagementTab />
         </TabsContent>
 
         {/* Content Tab */}
         <TabsContent value="content">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Posts del Blog</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  Gestiona los posts del blog
-                </p>
-                <Button>Crear Post</Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Moderación del Foro</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  Revisa y modera el contenido del foro
-                </p>
-                <Button variant="outline">Ver Posts</Button>
-              </CardContent>
-            </Card>
-          </div>
+          <Tabs defaultValue="blog" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="blog">Blog</TabsTrigger>
+              <TabsTrigger value="forum">Foro</TabsTrigger>
+            </TabsList>
+            <TabsContent value="blog">
+              <BlogManagementTab />
+            </TabsContent>
+            <TabsContent value="forum">
+              <ForumManagementTab />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
         {/* Reports Tab */}
         <TabsContent value="reports">
-          <Card>
-            <CardHeader>
-              <CardTitle>Sistema de Reportes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2 mb-4">
-                <Shield className="h-5 w-5" />
-                <span>Reportes pendientes: {stats?.pendingReports || 0}</span>
-              </div>
-              <p className="text-muted-foreground">
-                Sistema de reportes y moderación en desarrollo...
-              </p>
-            </CardContent>
-          </Card>
+          <ReportsManagementTab />
         </TabsContent>
 
         {/* Analytics Tab */}
