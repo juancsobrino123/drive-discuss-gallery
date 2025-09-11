@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, Search, Send } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { MessageCircle, Search, Send, Plus } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
 
@@ -305,15 +306,26 @@ const Messages = () => {
 
                 {/* Message Input */}
                 <div className="border-t p-4">
-                  <div className="flex gap-2">
-                    <Input
+                  <div className="flex gap-2 items-end">
+                    <Textarea
                       placeholder="Escribe un mensaje..."
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-                      className="flex-1"
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          sendMessage();
+                        }
+                      }}
+                      className="flex-1 min-h-[60px] max-h-[120px] resize-none"
+                      rows={2}
                     />
-                    <Button onClick={sendMessage} size="icon">
+                    <Button 
+                      onClick={sendMessage} 
+                      size="icon"
+                      disabled={!newMessage.trim()}
+                      className="mb-1"
+                    >
                       <Send className="h-4 w-4" />
                     </Button>
                   </div>
