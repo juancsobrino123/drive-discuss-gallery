@@ -62,6 +62,7 @@ interface GroupMember {
 }
 
 const GroupDetail = () => {
+  // All hooks must be declared unconditionally at the top
   const { groupId } = useParams<{ groupId: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -79,7 +80,8 @@ const GroupDetail = () => {
   useEffect(() => {
     if (groupId && user) {
       loadGroupData();
-      setupRealtimeSubscription();
+      const cleanup = setupRealtimeSubscription();
+      return cleanup; // Return cleanup function
     }
   }, [groupId, user]);
 
