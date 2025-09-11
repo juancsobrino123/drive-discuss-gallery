@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageCircle, Search, Send, Plus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { MessageCircle, Search, Send, Plus, Users } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
 
@@ -48,11 +49,22 @@ const Messages = () => {
   const [newMessage, setNewMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [showNewConversation, setShowNewConversation] = useState(false);
+  const [userSearch, setUserSearch] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
 
   useEffect(() => {
     if (user) {
       loadConversations();
       setupRealtimeSubscription();
+      
+      // Check if there's a conversation ID in URL params to auto-select
+      const urlParams = new URLSearchParams(window.location.search);
+      const conversationId = urlParams.get('conversation');
+      if (conversationId) {
+        setSelectedConversation(conversationId);
+        loadMessages(conversationId);
+      }
     }
   }, [user]);
 
@@ -181,6 +193,80 @@ const Messages = () => {
     }
   };
 
+  const searchUsers = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, username, avatar_url")
+        .ilike("username", `%${query}%`)
+        .neq("id", user?.id)
+        .limit(5);
+
+      if (error) throw error;
+      setSearchResults(data || []);
+    } catch (error) {
+      console.error("Error searching users:", error);
+    }
+  };
+
+  const startConversationWithUser = async (otherUserId: string) => {
+    if (!user) return;
+
+    try {
+      // Check if conversation already exists
+      const { data: existingConversation, error: checkError } = await supabase
+        .from('conversations')
+        .select('id')
+        .or(`and(participant_1.eq.${user.id},participant_2.eq.${otherUserId}),and(participant_1.eq.${otherUserId},participant_2.eq.${user.id})`)
+        .single();
+
+      let conversationId;
+
+      if (existingConversation) {
+        conversationId = existingConversation.id;
+      } else {
+        // Create new conversation
+        const { data: newConversation, error: createError } = await supabase
+          .from('conversations')
+          .insert({
+            participant_1: user.id,
+            participant_2: otherUserId
+          })
+          .select('id')
+          .single();
+
+        if (createError) throw createError;
+        conversationId = newConversation.id;
+      }
+
+      // Select the conversation and load messages
+      setSelectedConversation(conversationId);
+      loadMessages(conversationId);
+      loadConversations(); // Refresh conversation list
+      setShowNewConversation(false);
+      setUserSearch("");
+      setSearchResults([]);
+
+      toast({
+        title: "Éxito",
+        description: "Conversación iniciada",
+      });
+
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo iniciar la conversación",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleConversationSelect = (conversationId: string) => {
     setSelectedConversation(conversationId);
     loadMessages(conversationId);
@@ -203,10 +289,66 @@ const Messages = () => {
   return (
     <div className="container mx-auto px-4 py-8 pt-20">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Mensajes</h1>
-        <p className="text-muted-foreground">
-          Comunícate con otros miembros de la comunidad
-        </p>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Mensajes</h1>
+            <p className="text-muted-foreground">
+              Comunícate con otros miembros de la comunidad
+            </p>
+          </div>
+          <Dialog open={showNewConversation} onOpenChange={setShowNewConversation}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Nueva Conversación
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Iniciar Nueva Conversación</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar usuario por nombre..."
+                    value={userSearch}
+                    onChange={(e) => {
+                      setUserSearch(e.target.value);
+                      searchUsers(e.target.value);
+                    }}
+                    className="pl-10"
+                  />
+                </div>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {searchResults.map((profile) => (
+                    <div
+                      key={profile.id}
+                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted cursor-pointer"
+                      onClick={() => startConversationWithUser(profile.id)}
+                    >
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={profile.avatar_url} />
+                        <AvatarFallback>
+                          {profile.username?.[0]?.toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium">{profile.username || "Usuario"}</p>
+                      </div>
+                    </div>
+                  ))}
+                  {userSearch && searchResults.length === 0 && (
+                    <div className="text-center py-4 text-muted-foreground">
+                      <Users className="mx-auto h-8 w-8 mb-2" />
+                      <p>No se encontraron usuarios</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">

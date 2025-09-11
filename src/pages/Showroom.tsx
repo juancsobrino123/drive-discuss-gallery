@@ -287,12 +287,12 @@ export default function Showroom() {
         conversationId = newConversation.id;
       }
 
-      // Navigate to messages page
-      navigate('/messages');
+      // Navigate to messages page with conversation ID as parameter
+      navigate(`/messages?conversation=${conversationId}`);
       
       toast({
         title: "Éxito",
-        description: "Redirigiendo a mensajes...",
+        description: "Abriendo conversación...",
       });
 
     } catch (error) {
