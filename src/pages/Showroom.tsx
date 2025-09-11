@@ -266,11 +266,17 @@ export default function Showroom() {
         .from('conversations')
         .select('id')
         .or(`and(participant_1.eq.${user.id},participant_2.eq.${userId}),and(participant_1.eq.${userId},participant_2.eq.${user.id})`)
-        .single();
+        .maybeSingle(); // Use maybeSingle() instead of single() to avoid error when no match
 
       let conversationId;
 
+      if (checkError) {
+        console.error('Error checking conversation:', checkError);
+        throw checkError;
+      }
+
       if (existingConversation) {
+        // Conversation exists
         conversationId = existingConversation.id;
       } else {
         // Create new conversation
@@ -283,7 +289,11 @@ export default function Showroom() {
           .select('id')
           .single();
 
-        if (createError) throw createError;
+        if (createError) {
+          console.error('Error creating conversation:', createError);
+          throw createError;
+        }
+        
         conversationId = newConversation.id;
       }
 
