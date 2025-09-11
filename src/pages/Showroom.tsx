@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Car, MapPin, Trophy, Star, Calendar, Heart, Eye, ArrowLeft, MessageCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/components/ui/use-toast';
 import ProfileCarsSection from '@/components/ui/profile-cars-section';
 
 interface UserProfile {
@@ -60,6 +61,8 @@ interface Photo {
 export default function Showroom() {
   const { userId } = useParams<{ userId: string }>();
   const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [currentCars, setCurrentCars] = useState<UserCar[]>([]);
   const [favoriteCars, setFavoriteCars] = useState<UserCar[]>([]);
@@ -254,6 +257,54 @@ export default function Showroom() {
   const showLocation = profile.privacy_settings?.show_location !== false;
   const showActivity = profile.privacy_settings?.show_activity !== false;
 
+  const sendMessage = async () => {
+    if (!user || !userId || user.id === userId) return;
+
+    try {
+      // Check if conversation already exists
+      const { data: existingConversation, error: checkError } = await supabase
+        .from('conversations')
+        .select('id')
+        .or(`and(participant_1.eq.${user.id},participant_2.eq.${userId}),and(participant_1.eq.${userId},participant_2.eq.${user.id})`)
+        .single();
+
+      let conversationId;
+
+      if (existingConversation) {
+        conversationId = existingConversation.id;
+      } else {
+        // Create new conversation
+        const { data: newConversation, error: createError } = await supabase
+          .from('conversations')
+          .insert({
+            participant_1: user.id,
+            participant_2: userId
+          })
+          .select('id')
+          .single();
+
+        if (createError) throw createError;
+        conversationId = newConversation.id;
+      }
+
+      // Navigate to messages page
+      navigate('/messages');
+      
+      toast({
+        title: "Éxito",
+        description: "Redirigiendo a mensajes...",
+      });
+
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo iniciar la conversación",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -314,7 +365,7 @@ export default function Showroom() {
 
                 {!isOwnProfile && (
                   <div className="flex gap-2 mt-4">
-                    <Button className="flex items-center gap-2">
+                    <Button onClick={sendMessage} className="flex items-center gap-2">
                       <MessageCircle className="w-4 h-4" />
                       Enviar Mensaje
                     </Button>
